@@ -9,8 +9,8 @@ import { useRaceAnimation } from './composables/useRaceAnimation'
 import { useRaceStore } from './stores/race'
 
 const race = useRaceStore()
-const { horses, rounds, status, isActive, activeRound, results } = storeToRefs(race)
-const { toggleRace } = useRaceAnimation(race)
+const { horses, rounds, status, isActive, activeRound, results, playbackSpeed } = storeToRefs(race)
+const { toggleRace, requestStop, resolveStop, changeSpeed, stopConfirmationOpen } = useRaceAnimation(race)
 </script>
 
 <template>
@@ -18,8 +18,13 @@ const { toggleRace } = useRaceAnimation(race)
     <AppHeader
       :status="status"
       :generate-disabled="isActive"
+      :playback-speed="playbackSpeed"
+      :stop-confirmation-open="stopConfirmationOpen"
       @generate="race.generateProgram"
       @toggle-race="toggleRace"
+      @request-stop="requestStop"
+      @resolve-stop="resolveStop"
+      @change-speed="changeSpeed"
     />
 
     <main class="dashboard">

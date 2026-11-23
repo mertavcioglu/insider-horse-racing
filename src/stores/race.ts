@@ -6,7 +6,9 @@ import {
   createRaceSimulation, getRoundResult, type RoundResult, type RaceSimulation,
 } from '../domain/raceSimulation'
 
-export type RaceStatus = 'idle' | 'ready' | 'running' | 'paused' | 'transition' | 'finished'
+export type RaceStatus = 'idle' | 'ready' | 'running' | 'paused' | 'transition' | 'finished' | 'stopped'
+export const PLAYBACK_SPEEDS = [0.5, 1, 2] as const
+export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number]
 
 export const useRaceStore = defineStore('race', () => {
   const horses = ref(createHorses())
@@ -14,6 +16,7 @@ export const useRaceStore = defineStore('race', () => {
   const status = ref<RaceStatus>('idle')
   const simulation = shallowRef<RaceSimulation | null>(null)
   const elapsedMs = ref(0)
+  const playbackSpeed = ref<PlaybackSpeed>(1)
   const results = shallowRef<readonly RoundResult[]>([])
   const activeRound = computed(() =>
     status.value === 'running' || status.value === 'paused' ? simulation.value?.round.number : undefined,
@@ -28,6 +31,7 @@ export const useRaceStore = defineStore('race', () => {
     simulation.value = null
     elapsedMs.value = 0
     results.value = []
+    playbackSpeed.value = 1
     status.value = 'ready'
   }
 
@@ -56,6 +60,17 @@ export const useRaceStore = defineStore('race', () => {
     if (status.value === 'paused') status.value = 'running'
   }
 
+  function stop() {
+    if (!isActive.value) return
+    status.value = 'stopped'
+    simulation.value = null
+    elapsedMs.value = 0
+  }
+
+  function setPlaybackSpeed(speed: PlaybackSpeed) {
+    playbackSpeed.value = speed
+  }
+
   function advance(deltaMs: number) {
     const currentRace = simulation.value
     if (status.value !== 'running' || !currentRace) return
@@ -68,7 +83,7 @@ export const useRaceStore = defineStore('race', () => {
   }
 
   return {
-    horses, rounds, status, simulation, elapsedMs, results, activeRound, isActive,
-    generateProgram, start, startNextRound, pause, resume, advance,
+    horses, rounds, status, simulation, elapsedMs, results, activeRound, isActive, playbackSpeed,
+    generateProgram, start, startNextRound, pause, resume, advance, stop, setPlaybackSpeed,
   }
 })

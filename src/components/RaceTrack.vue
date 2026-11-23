@@ -46,6 +46,7 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
           <span v-else-if="status === 'transition'"> · Complete. Round {{ simulation.round.number + 1 }} starts shortly.</span>
           <span v-else-if="status === 'finished'"> · All rounds complete. Generate a new program to race again.</span>
         </template>
+        <template v-else-if="status === 'stopped'">Race stopped. Select Generate Program to race again.</template>
         <template v-else-if="status === 'ready'">Program ready. Select Start to begin round 1.</template>
         <template v-else>Select Generate Program to create six rounds.</template>
       </p>

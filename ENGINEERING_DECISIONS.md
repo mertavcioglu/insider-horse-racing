@@ -32,6 +32,14 @@
 
 **Trade-offs** — The board can lag the frame-rendered track by a sample interval and can skip brief overtakes. The latest podium limits right-panel height while every official result remains available in the tables.
 
+## Stop and playback speed
+
+**Decision** — Keep the confirmation flag local to the controls, with a distinct `stopped` state in Pinia for confirmed cancellation. Apply playback speed to real-time frame deltas. Commit the partial frame at the old rate before assigning a new rate.
+
+**Rationale** — Opening the dialog freezes the last displayed frame and cancels scheduled work. Cancel preserves the prior race state and resumes any remaining real-time transition delay. Confirm discards the active simulation and retains completed results. Scaling deltas leaves pace segments and official finish times intact.
+
+**Trade-offs** — The composable tracks the transition deadline and remaining delay to make cancellation reversible. The transition uses real time independently of race playback. Native dialog behavior provides keyboard focus containment and Escape handling.
+
 ## Deterministic tests
 
 **Decision** — Inject fixed random draws into domain tests, use fake timers for lifecycle tests, and seed the browser random source and control its clock for Playwright.

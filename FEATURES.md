@@ -1,54 +1,55 @@
-# Horse Racing özellikleri
+# Horse Racing Features
 
-**Tamamlandı** uygulandı ve doğrulandı. **Devam Ediyor** kısmen uygulandı. **Planlandı** henüz uygulanmadı.
+**Completed** means implemented and verified. **In Progress** means partially implemented. **Planned** means implementation has yet to start.
 
-## A. Orijinal case gereksinimleri
+## Original Assessment Requirements
 
-Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
+Source: Insider One's *Software Developer Assessment Project* PDF.
 
-| Özellik | Durum | Davranış |
+| Feature | Status | Behavior |
 | --- | --- | --- |
-| At havuzu, renkler ve kondisyon | Tamamlandı | Oyunda 20 at bulunur. Her ata farklı bir renk ve 1–100 aralığında rastgele bir tam sayı kondisyon puanı verilir. At listesinde ad, renk ve kondisyon görünür. |
-| Altı turluk program | Tamamlandı | **Generate Program** sırasıyla 1200, 1400, 1600, 1800, 2000 ve 2200 m mesafelerinde altı tur oluşturur. Her tur mevcut havuzdan rastgele ve tekrarsız 10 at seçer. Program paneli mesafeleri, kulvarları ve at adlarını gösterir. |
-| Start ile sıralı yarış akışı | Tamamlandı | Program oluşturulunca **Start** ilk turu başlatır. Sonraki beş tur sırayla ve otomatik başlar. Altıncı turun sonunda program tamamlanır. |
-| Pistte at hareketi | Tamamlandı | Aktif turun numarası, mesafesi ve 10 katılımcısı pistte gösterilir. Atlar kendi kulvarında soldan sağa ilerler ve bitiş konumunda kalır. Yeni turda pist o turun katılımcılarını gösterir. |
-| Tur sonuçlarının sırasıyla gösterilmesi | Tamamlandı | Her turun sonucu son at bitirdiğinde Pinia'ya kaydedilir ve Sonuçlar paneline eklenir. Kaydırılabilir panel tur numarasını, mesafeyi, 10 atın bitiş sırasını, adını, rengini ve yarış saniyesi cinsinden süresini gösterir. Altı sonuç program tamamlandıktan sonra da görüntülenebilir. |
-| Merkezi durum, bileşenler ve kod yapısı | Tamamlandı | Pinia, atları, programı ve yarış durumunu tutar. Vue bileşenleri ekranı oluşturur. Saf TypeScript fonksiyonları yarış kurallarını, composable ise tarayıcı zamanlayıcısını yönetir. |
-| PDF bonusları: birim ve E2E testleri | Tamamlandı | Vitest hesaplamaları, Pinia geçişlerini ve zamanlayıcı yaşam döngüsünü doğrular. Playwright, altı turluk kullanıcı akışını Chromium'da doğrular. |
-| PDF bonusu: görsel regresyon testleri | Tamamlandı | Playwright, 1440 × 900 Windows Chromium referanslarıyla başlangıç ekranını, oluşturulan programı ve ilk tamamlanan turun sonucunu karşılaştırır. |
+| Horse roster, colors, and condition | Completed | The roster contains 20 horses. Each has a distinct color and a random integer condition from 1 to 100. The roster shows each horse's name, color, and condition. |
+| Six-round program | Completed | **Generate Program** creates six rounds of 1200, 1400, 1600, 1800, 2000, and 2200 m. Each round selects 10 distinct horses at random. The Program panel shows distances, lanes, and names. |
+| Sequential race flow | Completed | **Start** begins round one. Under normal operation the remaining five rounds start automatically in order. |
+| Animated track | Completed | The track shows the round number, distance, and 10 participants. Horses move to the right in their own lanes and remain at the finish line until the next round. |
+| Official results | Completed | After the last horse finishes, Pinia records the result and the Results panel appends the 10 ranked horses with their names, colors, and simulated finish times. Completed results remain visible. |
+| Component design and state management | Completed | Vue components render the interface, Pinia owns shared race state, pure TypeScript calculates race outcomes, and a composable manages browser timing. |
+| Unit and E2E bonuses | Completed | Vitest covers calculations, store transitions, and timers. Playwright covers the complete six-round workflow and the race controls. |
+| Visual testing bonus | Completed | Playwright compares the initial dashboard, generated program, and first completed result against Windows Chromium baselines at 1440 × 900. |
 
-## B. Uygulama kararları ve eklenen davranışlar
+## Implementation Decisions
 
-| Özellik | Durum | Davranış |
+| Feature | Status | Behavior |
 | --- | --- | --- |
-| PDF'deki at sayısı belirsizliği | Tamamlandı | PDF'de rastgele 1–20 at ifadesi ve toplam 20 at kuralı bulunuyor. Onaylanan yorum, uygulama açılışında her zaman 20 at oluşturmak ve kondisyonlarını rastgele belirlemek. |
-| At kimliği ve tur seçimi | Tamamlandı | Her atın benzersiz sayısal kimliği vardır. Adlar ve renkler sabit listelerden atanır. Her tur havuzun tamamından bağımsız bir çekiliş yapar. Aynı at farklı turlarda tekrar seçilebilir. |
-| Programı yenileme | Tamamlandı | **Generate Program** hazır ve tamamlanmış programı yenileyebilir. Yarış ilerlerken, duraklatılmışken ve turlar arasında düğme ve Pinia işlemi kilitlidir. Yeni program simülasyonu, yarış saatini ve sonuçları sıfırlar, at kimliklerini ve kondisyonları korur. Yeni Start birinci turdan başlar. |
-| Responsive yerleşim ve panel durumları | Tamamlandı | Geniş ekranda at listesi solda, numaralı pist ortada, Program ve Sonuçlar sağdadır. Dar ekranlarda paneller alt satırlara geçer ve mobil at listesi daha kısa bir bölgede kaydırılır. Program paneli aktif tura kendi içinde kayar. Etiketler aktif, tamamlanan ve bekleyen turları ayırt eder. Pist üzerinde başlangıç yönlendirmesi, tur bilgisi ve program sonu mesajı bulunur. |
-| Klavye ve hareket azaltma | Tamamlandı | Kontroller klavyeyle çalışır ve görünür odak çizgisine sahiptir. Yarış düğmesi geçişte kullanılamaz ve mevcut odağı korur. Durum değişiklikleri pistteki canlı bölgede duyurulur. `prefers-reduced-motion` etkinse at işaretçileri sabit kalır ve bitirdiklerinde metinle belirtilir. Yarış saati ve sonuçlar aynı şekilde ilerler. |
-| Kondisyon bazlı hız | Tamamlandı | Kondisyon 1–100 aralığından 14–18 m/s temel hıza doğrusal olarak çevrilir. Her atın tur formu 0,88–1,12 çarpanı, üç eşit mesafe bölümünün temposu ise ayrı ayrı 0,95–1,05 çarpanı alır. Yüksek kondisyon avantaj sağlar, yakın kondisyonlu atlarda rastgelelik sıralamayı değiştirebilir. Simülasyon zamanı gerçek zamandan sekiz kat hızlıdır. Aynı hesap her altı mesafe için çalışır. |
-| Yarış saati ve pist animasyonu | Tamamlandı | Tek bir `requestAnimationFrame` döngüsü geçen süreyi günceller. Pist aynı hız parçalarından hesaplanan ilerleme yüzdesini kulvar genişliğine göre uygular. Pencere boyutu değişse de ilerleme oranı korunur. |
-| Yarış durumları ve tur geçişi | Tamamlandı | Pinia bekleme, hazır, çalışıyor, duraklatıldı, geçiş ve tamamlandı durumlarını yönetir. İlk beş turun sonucu kaydedildikten sonra pist 1,5 saniye bitiş konumunda kalır ve yarış kontrolü devre dışıdır. Sonraki tur sıfır süreyle ve yeni hız değerleriyle başlar. Uygulama bileşeni kaldırıldığında bekleyen kare ve geçiş zamanlayıcısı iptal edilir. |
-| Pause ve Resume | Tamamlandı | Pause, tıklamaya kadarki yarış süresini kaydedip animasyonu durdurur. Resume zaman referansını yeniden alır ve o konumdan devam eder. Duraklamada geçen zaman yarışa eklenmez. Art arda tıklamalar ikinci bir animasyon döngüsü oluşturmaz. |
-| Bitiş zamanı ve eşitlik kuralı | Tamamlandı | Bir atın bitiş zamanı üç mesafe bölümünün süreleri toplanarak hesaplanır. Sıralama yuvarlanmamış bitiş zamanına göre yapılır. Tam eşitlikte küçük kulvar numarası öne geçer. Panel süreyi iki ondalık basamakla gösterir. |
-| Proje altyapısı | Tamamlandı | Vue 3 Composition API ve `<script setup>`, TypeScript, Vite, Pinia ve CSS kullanılır. `npm run build` önce Vue ve TypeScript tiplerini denetler, ardından üretim paketini oluşturur. |
+| Roster size interpretation | Completed | The PDF mentions both 1–20 horses and a pool of 20. Each page load creates exactly 20 horses and randomizes their condition scores. |
+| Horse identity and selection | Completed | Horses have stable numeric IDs and names and colors from fixed lists. Each round draws from the full pool independently, so horses may return in later rounds. |
+| Program regeneration | Completed | **Generate Program** is available before racing or after the program finishes or is stopped. It resets results, simulation, elapsed time, and playback speed while retaining the roster. |
+| Responsive layout and panel states | Completed | At desktop widths the roster is left, the track is centered, and Program and Results are right. At narrower widths the panels stack. The Program panel scrolls to the active round and distinguishes active, completed, and upcoming rounds. |
+| Keyboard and reduced motion | Completed | Controls support keyboard operation and visible focus. The race action retains focus during transitions. The track announces status changes and uses fixed markers with finish text for reduced motion. |
+| Condition-based pace | Completed | Condition maps linearly to a 14–18 m/s base speed. Each horse draws a 0.88–1.12 form multiplier per round and a 0.95–1.05 tempo multiplier for each of three equal-distance segments. At 1x, one real second advances eight simulated seconds. |
+| Race clock and transitions | Completed | One animation frame loop advances elapsed time. After completed rounds one through five, a 1.5-second real-time delay precedes a fresh simulation. The race action is unavailable during that delay. Unmount clears pending frames and transition callbacks. |
+| Pause and Resume | Completed | Pause commits time up to the click and stops the loop. Resume rebases the clock. Paused time is excluded. Repeated actions do not create another loop. |
+| Finish-time ordering | Completed | A horse's finish time comes from the sum of its segment times. Results sort using unrounded times, with lane number breaking exact ties. Times display to two decimal places. |
 
 ## Enhancements Beyond Assessment Requirements
 
 | Feature | Status | Description | Reason | Technical Approach | Assessment Relation |
 | --- | --- | --- | --- | --- | --- |
-| Custom SVG Horse Indicators | Completed | Yandan görünen, renkli koşan at silüetleri pistteki katılımcıları temsil eder. | Atları küçük boyutta tanınabilir kılar ve kulvar numaralarını açık bırakır. | Proje için çizilmiş yerel SVG, atın rengini devralır. Kulvar yerleşimi ve hareket azaltma tercihi korunur. | İsteğe bağlı görsel geliştirme. Atların hareket etmesi PDF gereksinimidir. |
-| Live Race Leaderboard | Completed | İlk üçü öne çıkarır ve pist içinde kaydırılabilir listede 10 atın sırasını ve ilerleme yüzdesini gösterir. | Geçici yarış durumunun takip edilmesini kolaylaştırır. | Pist konumları ve sıralama aynı ilerleme değerlerini kullanır. Tablo yarış saatinden yaklaşık 250 ms aralıklarla örneklenir ve bitişte kesin sırayla eşleşir. Devam eden turdaki eşit ilerleme kulvar numarasıyla, bitiren atlar gerçek bitiş zamanı ve ardından kulvarla sıralanır. | İsteğe bağlı. Resmî sonuçlar ilgili tur tamamlanınca yayımlanır. |
-| Live Position Change Indicators | Completed | Ok ve sıra farkı, bir önceki örneğe göre yükselmeyi veya düşmeyi gösterir. Sabit sırada çizgi görünür. | Sıra değişimini renk dışında da anlaşılır kılar. | Önceki örneğin sıraları pist bileşeninde tutulur. Pause sırasında örnekleme durur. Yeni tur veya program önceki turla karşılaştırılmaz. | İsteğe bağlı. |
-| Race Podium | Completed | Son tamamlanan turun ilk üç atını altın, gümüş ve bronz işaretleriyle, adları ve süreleriyle özetler. | İlk üçü hızlıca bulmayı sağlar, tüm turların tam sonuç tabloları erişilebilir kalır. | Pinia'daki son tamamlanan turun sıralı sonuç kaydından ilk üç giriş alınır. Yeni program sonuçları ve podyumu temizler. | İsteğe bağlı özet. Tam sonuç tablosu PDF gereksinimidir. |
+| Custom SVG Horse Indicators | Completed | Side-view silhouettes use each horse's roster color. | Makes horses recognizable at lane size. | An original local SVG inherits the horse color and uses the track's existing motion. | Optional visual enhancement to the required track animation. |
+| Live Race Leaderboard | Completed | Shows all 10 positions and progress, highlighting the first three. | Makes provisional order easier to follow. | Samples the same progress used by the track about every 250 ms of race-clock time. Lane breaks in-progress ties. Finish time and lane order finishers. | Optional view. Official results remain separate. |
+| Live Position Change Indicators | Completed | Arrows show gains or losses from the previous sample. A dash means unchanged. | Makes changes understandable without relying on color. | The track holds previous ranks locally and clears them on a new round or program. | Optional. |
+| Race Podium | Completed | Gold, silver, and bronze summarize the latest completed round's top three, with names and times. | Highlights the leaders while preserving the full tables. | Reads the first three entries of the latest official result. Regeneration clears it. | Optional summary of the required official results. |
+| Stop Race | Completed | After confirmation, stops an active, paused, or transitioning program. Completed outcomes remain, including the latest podium. | Allows leaving a program without waiting for all six rounds. | Pinia enters `stopped` and clears the active simulation. Generate Program starts a fresh program. | Optional explicit cancellation. Normal race flow still runs all six rounds. |
+| Stop Confirmation Dialog | Completed | Cancel or Escape restores the previous activity. End Race confirms cancellation. | Prevents accidental cancellation and keeps the state stable while deciding. | A native modal focuses Cancel. The composable cancels pending work and stores the remaining transition delay. Focus returns to Stop on cancel or Generate Program on confirmation. | Optional safeguard. |
+| Playback Speed Control | Completed | Offers 0.5x, 1x, and 2x, equivalent to 4, 8, and 16 simulated seconds per real second. | Lets viewers follow the race at their preferred pace. | Scales elapsed frame deltas. The selection persists between rounds, resets to 1x on generation, and leaves the transition delay and official results unchanged. | Optional viewing control. |
+| Dynamic Speed Switching | Completed | Speed can change while running or paused and takes effect from the current position. | Lets viewers adjust pace during a program. | Running time through the input is charged at the previous rate. Future frame deltas use the new rate. A paused clock stays frozen. | Optional viewing behavior. |
 
-## Otomatik testleri çalıştırma
+## Running the Checks
 
-- `npm test` birim testlerini çalıştırır. Geliştirme sırasında `npm run test:watch` kullanılabilir. Testler tekrarlanabilir sonuçlar için sabit rastgelelik ve sanal zaman kullanır.
-- `npx playwright install chromium` tarayıcıyı hazırlar. `npm run test:e2e` Vite'ı başlatıp program oluşturma, Pause/Resume, altı turun sonuçları ve programı sıfırlama akışını test eder. Tarayıcı saati yalnızca test içinde ilerletilir.
-- `npm run test:visual` üç ekran durumunu kayıtlı Windows Chromium referanslarıyla karşılaştırır. Kurulum ve platform bilgisi için [README.md](README.md) dosyasına bak.
-- `npm run build` uygulamayla birlikte TypeScript test dosyalarını da tip denetiminden geçirir.
+- `npm test` runs unit tests. `npm run test:watch` watches during development.
+- Install Chromium with `npx playwright install chromium`. Run `npm run test:e2e` for browser behavior and `npm run test:visual` for screenshot comparisons.
+- `npm run build` checks application and test types and builds the production bundle.
 
-## Güncelleme kuralı
+## Maintenance
 
-Her geliştirme aşamasının sonunda bu dosyayı kodla karşılaştır. Yeni veya değişen davranışı ilgili satırda güncelle, yürürlükten kalkan davranışı çıkar ve doğrulanan özelliklerin durumunu değiştir. İsteğe bağlı ürün geliştirmelerini Enhancements Beyond Assessment Requirements bölümünde güncel tut.
+Update the applicable entry when behavior changes. Keep assessment requirements and optional enhancements separate, and mark a feature Completed after verification.
