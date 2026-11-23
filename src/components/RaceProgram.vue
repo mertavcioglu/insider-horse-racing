@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import type { RaceRound } from '../domain/raceProgram'
 
-defineProps<{ rounds: readonly RaceRound[] }>()
+defineProps<{
+  rounds: readonly RaceRound[]
+  activeRound?: number
+  completedCount: number
+}>()
 </script>
 
 <template>
@@ -10,7 +14,15 @@ defineProps<{ rounds: readonly RaceRound[] }>()
     <p v-if="!rounds.length" class="empty-state">Generate a program to see the lineups.</p>
     <div v-else class="table-scroll" tabindex="0" role="region" aria-labelledby="program-title">
       <table v-for="round in rounds" :key="round.number">
-        <caption>Round {{ round.number }} · {{ round.distance }} m</caption>
+        <caption
+          :class="{ active: activeRound === round.number, complete: round.number <= completedCount }"
+          :aria-current="activeRound === round.number ? 'step' : undefined"
+        >
+          Round {{ round.number }} · {{ round.distance }} m
+          <span v-if="activeRound === round.number">Active</span>
+          <span v-else-if="round.number <= completedCount">Complete</span>
+          <span v-else>Upcoming</span>
+        </caption>
         <thead>
           <tr>
             <th scope="col">Lane</th>
@@ -31,5 +43,8 @@ defineProps<{ rounds: readonly RaceRound[] }>()
 <style scoped>
 .panel-title { background: #e6edf9; }
 caption { padding: .65rem; background: #eef3fb; font-weight: 700; text-align: left; }
+caption.active { background: #d4edb5; }
+caption.complete { background: #e6f3ec; }
+caption span { display: block; margin-top: .15rem; color: var(--muted); font-size: .75rem; }
 tbody th { font-weight: 550; }
 </style>

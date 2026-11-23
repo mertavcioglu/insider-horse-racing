@@ -9,7 +9,8 @@ const raceLabels: Record<RaceStatus, string> = {
   ready: 'Start',
   running: 'Pause',
   paused: 'Resume',
-  finished: 'Round Complete',
+  transition: 'Next Round Soon',
+  finished: 'Program Complete',
 }
 </script>
 
@@ -23,7 +24,7 @@ const raceLabels: Record<RaceStatus, string> = {
       <button
         class="race-action"
         type="button"
-        :disabled="status === 'idle' || status === 'finished'"
+        :disabled="['idle', 'transition', 'finished'].includes(status)"
         @click="emit('toggleRace')"
       >
         {{ raceLabels[status] }}

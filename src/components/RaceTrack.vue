@@ -40,7 +40,8 @@ const laneProgress = computed(() => {
       <p v-if="simulation" class="track-status" role="status">
         Round {{ simulation.round.number }} · {{ simulation.round.distance }} m
         <span v-if="status === 'paused'"> · Paused</span>
-        <span v-if="status === 'finished'"> · Complete</span>
+        <span v-else-if="status === 'transition'"> · Complete. Round {{ simulation.round.number + 1 }} starts shortly.</span>
+        <span v-else-if="status === 'finished'"> · All rounds complete.</span>
       </p>
     </div>
   </section>

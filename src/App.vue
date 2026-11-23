@@ -3,12 +3,13 @@ import { storeToRefs } from 'pinia'
 import AppHeader from './components/AppHeader.vue'
 import HorseList from './components/HorseList.vue'
 import RaceProgram from './components/RaceProgram.vue'
+import RaceResults from './components/RaceResults.vue'
 import RaceTrack from './components/RaceTrack.vue'
 import { useRaceAnimation } from './composables/useRaceAnimation'
 import { useRaceStore } from './stores/race'
 
 const race = useRaceStore()
-const { horses, rounds, status, isActive } = storeToRefs(race)
+const { horses, rounds, status, isActive, activeRound, results } = storeToRefs(race)
 const { toggleRace } = useRaceAnimation(race)
 </script>
 
@@ -25,11 +26,8 @@ const { toggleRace } = useRaceAnimation(race)
       <HorseList :horses="horses" />
       <RaceTrack />
       <div class="race-details">
-        <RaceProgram :rounds="rounds" />
-        <section class="panel results" aria-labelledby="results-title">
-          <h2 id="results-title" class="panel-title">Results</h2>
-          <p class="empty-state">Round results will be available in a later update.</p>
-        </section>
+        <RaceProgram :rounds="rounds" :active-round="activeRound" :completed-count="results.length" />
+        <RaceResults :results="results" />
       </div>
     </main>
   </div>
@@ -79,7 +77,6 @@ button { font: inherit; }
   font-size: 1rem;
 }
 
-.results .panel-title { background: #e6f3ec; }
 .empty-state { margin: 0; padding: 1rem; font-size: .875rem; color: var(--muted); }
 .table-scroll { max-height: 36rem; overflow: auto; }
 .table-scroll:focus-visible { outline: 2px solid #14785e; outline-offset: -2px; }

@@ -25,6 +25,15 @@ export interface RaceSimulation {
   readonly durationMs: number
 }
 
+export interface RoundResult {
+  readonly round: RaceRound['number']
+  readonly distance: RaceRound['distance']
+  readonly entries: readonly {
+    readonly horse: Horse
+    readonly finishSeconds: number
+  }[]
+}
+
 export function createRaceSimulation(round: RaceRound, random = Math.random): RaceSimulation {
   const segmentMeters = round.distance / SEGMENT_COUNT
   const runners = round.participants.map((horse, index) => {
@@ -60,6 +69,17 @@ export function getRaceProgress(runner: RaceRunner, distance: number, elapsedMs:
   return 1
 }
 
-export function getFinishOrder(simulation: RaceSimulation): RaceRunner[] {
-  return [...simulation.runners].sort((a, b) => a.finishMs - b.finishMs || a.lane - b.lane)
+export function getRoundResult(simulation: RaceSimulation): RoundResult {
+  const orderedRunners = [...simulation.runners].sort(
+    (a, b) => a.finishMs - b.finishMs || a.lane - b.lane,
+  )
+
+  return {
+    round: simulation.round.number,
+    distance: simulation.round.distance,
+    entries: orderedRunners.map(({ horse, finishMs }) => ({
+      horse,
+      finishSeconds: finishMs * TIME_SCALE / 1000,
+    })),
+  }
 }
