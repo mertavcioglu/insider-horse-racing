@@ -33,6 +33,15 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 | Bitiş zamanı ve eşitlik kuralı | Tamamlandı | Bir atın bitiş zamanı üç mesafe bölümünün süreleri toplanarak hesaplanır. Sıralama yuvarlanmamış bitiş zamanına göre yapılır. Tam eşitlikte küçük kulvar numarası öne geçer. Panel süreyi iki ondalık basamakla gösterir. |
 | Proje altyapısı | Tamamlandı | Vue 3 Composition API ve `<script setup>`, TypeScript, Vite, Pinia ve CSS kullanılır. `npm run build` önce Vue ve TypeScript tiplerini denetler, ardından üretim paketini oluşturur. |
 
+## Enhancements Beyond Assessment Requirements
+
+| Feature | Status | Description | Reason | Technical Approach | Assessment Relation |
+| --- | --- | --- | --- | --- | --- |
+| Custom SVG Horse Indicators | Completed | Yandan görünen, renkli koşan at silüetleri pistteki katılımcıları temsil eder. | Atları küçük boyutta tanınabilir kılar ve kulvar numaralarını açık bırakır. | Proje için çizilmiş yerel SVG, atın rengini devralır. Kulvar yerleşimi ve hareket azaltma tercihi korunur. | İsteğe bağlı görsel geliştirme. Atların hareket etmesi PDF gereksinimidir. |
+| Live Race Leaderboard | Completed | İlk üçü öne çıkarır ve pist içinde kaydırılabilir listede 10 atın sırasını ve ilerleme yüzdesini gösterir. | Geçici yarış durumunun takip edilmesini kolaylaştırır. | Pist konumları ve sıralama aynı ilerleme değerlerini kullanır. Tablo yarış saatinden yaklaşık 250 ms aralıklarla örneklenir ve bitişte kesin sırayla eşleşir. Devam eden turdaki eşit ilerleme kulvar numarasıyla, bitiren atlar gerçek bitiş zamanı ve ardından kulvarla sıralanır. | İsteğe bağlı. Resmî sonuçlar ilgili tur tamamlanınca yayımlanır. |
+| Live Position Change Indicators | Completed | Ok ve sıra farkı, bir önceki örneğe göre yükselmeyi veya düşmeyi gösterir. Sabit sırada çizgi görünür. | Sıra değişimini renk dışında da anlaşılır kılar. | Önceki örneğin sıraları pist bileşeninde tutulur. Pause sırasında örnekleme durur. Yeni tur veya program önceki turla karşılaştırılmaz. | İsteğe bağlı. |
+| Race Podium | Completed | Son tamamlanan turun ilk üç atını altın, gümüş ve bronz işaretleriyle, adları ve süreleriyle özetler. | İlk üçü hızlıca bulmayı sağlar, tüm turların tam sonuç tabloları erişilebilir kalır. | Pinia'daki son tamamlanan turun sıralı sonuç kaydından ilk üç giriş alınır. Yeni program sonuçları ve podyumu temizler. | İsteğe bağlı özet. Tam sonuç tablosu PDF gereksinimidir. |
+
 ## Otomatik testleri çalıştırma
 
 - `npm test` birim testlerini çalıştırır. Geliştirme sırasında `npm run test:watch` kullanılabilir. Testler tekrarlanabilir sonuçlar için sabit rastgelelik ve sanal zaman kullanır.
@@ -42,4 +51,4 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 
 ## Güncelleme kuralı
 
-Her geliştirme aşamasının sonunda bu dosyayı kodla karşılaştır. Yeni veya değişen davranışı ilgili satırda güncelle, yürürlükten kalkan davranışı çıkar ve doğrulanan özelliklerin durumunu değiştir.
+Her geliştirme aşamasının sonunda bu dosyayı kodla karşılaştır. Yeni veya değişen davranışı ilgili satırda güncelle, yürürlükten kalkan davranışı çıkar ve doğrulanan özelliklerin durumunu değiştir. İsteğe bağlı ürün geliştirmelerini Enhancements Beyond Assessment Requirements bölümünde güncel tut.

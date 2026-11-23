@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { RoundResult } from '../domain/raceSimulation'
+import RacePodium from './RacePodium.vue'
 
-defineProps<{ results: readonly RoundResult[] }>()
+const props = defineProps<{ results: readonly RoundResult[] }>()
+const latestResult = computed(() => props.results.at(-1))
 </script>
 
 <template>
   <section class="panel" aria-labelledby="results-title">
     <h2 id="results-title" class="panel-title">Results</h2>
-    <p v-if="!results.length" class="empty-state">Results appear after each round.</p>
+    <p v-if="!latestResult" class="empty-state">Results appear after each round.</p>
     <div v-else class="table-scroll" tabindex="0" role="region" aria-labelledby="results-title">
+      <RacePodium :result="latestResult" />
       <table v-for="result in results" :key="result.round">
         <caption>Round {{ result.round }} · {{ result.distance }} m</caption>
         <thead>

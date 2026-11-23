@@ -1,17 +1,37 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
+import { computed, shallowRef, watch } from 'vue'
 import { LANE_COUNT } from '../domain/raceProgram'
-import { getRaceProgress } from '../domain/raceSimulation'
+import { getRaceProgress, rankRacePositions } from '../domain/raceSimulation'
 import { useRaceStore } from '../stores/race'
+import GallopingHorse from './GallopingHorse.vue'
+import LiveLeaderboard, { type Standing } from './LiveLeaderboard.vue'
 
 const { simulation, elapsedMs, status } = storeToRefs(useRaceStore())
 
-const laneProgress = computed(() => {
+const positions = computed(() => {
   const race = simulation.value
   if (!race) return []
 
-  return race.runners.map(runner => getRaceProgress(runner, race.round.distance, elapsedMs.value))
+  return race.runners.map(runner => ({
+    runner,
+    progress: getRaceProgress(runner, race.round.distance, elapsedMs.value),
+  }))
+})
+
+const standings = shallowRef<Standing[]>([])
+const leaderboardTick = computed(() => Math.floor(elapsedMs.value / 250))
+
+// Sample the existing frame data so the table stays readable and only updates a few times per second.
+watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
+  const previousRanks = new Map(
+    race === previousRace ? standings.value.map(({ horse }, index) => [horse.id, index]) : [],
+  )
+  standings.value = rankRacePositions(positions.value).map(({ runner: { horse }, progress }, index) => ({
+    horse,
+    percent: progress === 1 ? 100 : Math.floor(progress * 100),
+    change: (previousRanks.get(horse.id) ?? index) - index,
+  }))
 })
 </script>
 
@@ -33,21 +53,23 @@ const laneProgress = computed(() => {
       <ol class="lanes" aria-label="Race lanes">
         <li v-for="lane in LANE_COUNT" :key="lane">
           <span class="lane-number">{{ lane }}</span>
-          <div v-if="simulation?.runners[lane - 1]" class="lane-course">
-            <div class="lane-travel" :style="{ '--progress': `${laneProgress[lane - 1] * 100}%` }">
+          <div v-if="positions[lane - 1]" class="lane-course">
+            <div class="lane-travel" :style="{ '--progress': `${positions[lane - 1].progress * 100}%` }">
               <span
                 class="horse-marker"
                 role="img"
-                :aria-label="simulation.runners[lane - 1].horse.name + (laneProgress[lane - 1] === 1 ? ', finished' : '')"
-                :title="simulation.runners[lane - 1].horse.name"
-                :style="{ '--horse-color': simulation.runners[lane - 1].horse.color }"
+                :aria-label="positions[lane - 1].runner.horse.name + (positions[lane - 1].progress === 1 ? ', finished' : '')"
+                :title="positions[lane - 1].runner.horse.name"
+                :style="{ '--horse-color': positions[lane - 1].runner.horse.color }"
                 data-runner
-              >&#x265E;</span>
-              <span v-if="laneProgress[lane - 1] === 1" class="finish-label" aria-hidden="true">Finished</span>
+              ><GallopingHorse /></span>
+              <span v-if="positions[lane - 1].progress === 1" class="finish-label" aria-hidden="true">Finished</span>
             </div>
           </div>
         </li>
       </ol>
+      <LiveLeaderboard v-if="standings.length" :standings="standings"
+        :complete="status === 'transition' || status === 'finished'" />
     </div>
   </section>
 </template>
@@ -85,7 +107,7 @@ li + li { border-top: 1px dashed #96a77d; }
   font-weight: 700;
 }
 .lane-course {
-  --marker-width: 1.85rem;
+  --marker-width: 2.9rem;
   display: flex;
   align-items: center;
   flex: 1;
@@ -98,14 +120,11 @@ li + li { border-top: 1px dashed #96a77d; }
   display: grid;
   place-items: center;
   width: var(--marker-width);
-  height: 1.6rem;
-  border: 2px solid var(--horse-color);
-  border-radius: .35rem;
-  background: white;
-  color: #203415;
-  font-size: 1.05rem;
-  line-height: 1;
+  flex: 0 0 var(--marker-width);
+  height: 1.7rem;
+  color: var(--horse-color);
 }
+.horse-marker svg { display: block; width: 100%; height: 100%; }
 .track-status { min-height: 1.25rem; margin: 0 0 .75rem; color: var(--muted); font-size: .875rem; }
 .track-status strong { color: #192a26; }
 .finish-label { display: none; }

@@ -34,6 +34,11 @@ export interface RoundResult {
   }[]
 }
 
+export interface RacePosition {
+  readonly runner: RaceRunner
+  readonly progress: number
+}
+
 export function createRaceSimulation(round: RaceRound, random = Math.random): RaceSimulation {
   const segmentMeters = round.distance / SEGMENT_COUNT
   const runners = round.participants.map((horse, index) => {
@@ -69,10 +74,19 @@ export function getRaceProgress(runner: RaceRunner, distance: number, elapsedMs:
   return 1
 }
 
+function compareFinishOrder(a: RaceRunner, b: RaceRunner): number {
+  return a.finishMs - b.finishMs || a.lane - b.lane
+}
+
+export function rankRacePositions(positions: readonly RacePosition[]): RacePosition[] {
+  return [...positions].sort((a, b) => {
+    if (a.progress === 1 && b.progress === 1) return compareFinishOrder(a.runner, b.runner)
+    return b.progress - a.progress || a.runner.lane - b.runner.lane
+  })
+}
+
 export function getRoundResult(simulation: RaceSimulation): RoundResult {
-  const orderedRunners = [...simulation.runners].sort(
-    (a, b) => a.finishMs - b.finishMs || a.lane - b.lane,
-  )
+  const orderedRunners = [...simulation.runners].sort(compareFinishOrder)
 
   return {
     round: simulation.round.number,

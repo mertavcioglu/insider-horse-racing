@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Horse } from '../../../src/domain/horse'
 import type { RaceRound } from '../../../src/domain/raceProgram'
-import { createRaceSimulation, getRaceProgress, getRoundResult } from '../../../src/domain/raceSimulation'
+import { createRaceSimulation, getRaceProgress, getRoundResult, rankRacePositions } from '../../../src/domain/raceSimulation'
 
 const horse: Horse = { id: 1, name: 'Test Horse', color: '#123456', condition: 50 }
 
@@ -86,5 +86,36 @@ describe('raceSimulation', () => {
     const reversed = [...simulation.runners].reverse()
     expect(getRoundResult({ ...simulation, runners: reversed }).entries.map(entry => entry.horse.id)).toEqual([1, 2])
     expect(reversed[0].lane).toBe(2)
+  })
+
+  it('ranks the first three by actual progress without mutating lane order', () => {
+    const simulation = createRaceSimulation(createRound(1200, [25, 100, 50, 75, 1]), () => 0.5)
+    const positions = simulation.runners.map(runner => ({
+      runner,
+      progress: getRaceProgress(runner, simulation.round.distance, 1000),
+    }))
+    expect(rankRacePositions(positions).slice(0, 3).map(({ runner }) => runner.lane)).toEqual([2, 4, 3])
+    expect(positions.map(({ runner }) => runner.lane)).toEqual([1, 2, 3, 4, 5])
+  })
+
+  it('orders tied live positions by lane before anyone finishes', () => {
+    const simulation = createRaceSimulation(createRound(1200, [50, 50, 50]), () => 0.5)
+    const reversed = [...simulation.runners].reverse().map(runner => ({ runner, progress: 0.4 }))
+    expect(rankRacePositions(reversed).map(({ runner }) => runner.lane)).toEqual([1, 2, 3])
+  })
+
+  it('ranks finished horses by finish time, ahead of any unfinished horse', () => {
+    const simulation = createRaceSimulation(createRound(1200, [1, 80, 100, 80]), () => 0.5)
+    const positionsAt = (elapsedMs: number) => simulation.runners.map(runner => ({
+      runner,
+      progress: getRaceProgress(runner, simulation.round.distance, elapsedMs),
+    }))
+    const partiallyFinished = rankRacePositions(positionsAt(simulation.runners[1].finishMs))
+    expect(partiallyFinished.map(({ runner }) => runner.lane)).toEqual([3, 2, 4, 1])
+    expect(partiallyFinished.map(({ progress }) => progress === 1)).toEqual([true, true, true, false])
+    const final = rankRacePositions(positionsAt(simulation.durationMs))
+    expect(final.map(({ runner }) => runner.horse.id)).toEqual(
+      getRoundResult(simulation).entries.map(({ horse }) => horse.id),
+    )
   })
 })
