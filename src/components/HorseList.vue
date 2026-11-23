@@ -39,4 +39,8 @@ tbody th { font-weight: 550; }
 .horse-name { display: flex; align-items: center; gap: .5rem; }
 .swatch { flex: 0 0 .75rem; height: .75rem; border: 1px solid #192a2655; border-radius: 50%; }
 .condition { text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 40rem) {
+  .table-scroll { max-height: 12rem; }
+}
 </style>

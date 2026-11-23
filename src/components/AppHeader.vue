@@ -24,7 +24,8 @@ const raceLabels: Record<RaceStatus, string> = {
       <button
         class="race-action"
         type="button"
-        :disabled="['idle', 'transition', 'finished'].includes(status)"
+        :disabled="status === 'idle' || status === 'finished'"
+        :aria-disabled="status === 'transition' ? true : undefined"
         @click="emit('toggleRace')"
       >
         {{ raceLabels[status] }}
@@ -47,6 +48,7 @@ const raceLabels: Record<RaceStatus, string> = {
 h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.025em; }
 .controls { display: flex; flex-wrap: wrap; gap: .5rem; }
 button {
+  min-height: 2.75rem;
   padding: .65rem .85rem;
   border: 1px solid transparent;
   border-radius: .4rem;
@@ -56,7 +58,13 @@ button {
 .generate { background: #d8f3a3; color: #203415; cursor: pointer; }
 .generate:hover:not(:disabled) { background: #e7fac6; }
 .race-action { background: #fff; color: #172d26; cursor: pointer; }
-.race-action:hover:not(:disabled) { background: #e4efe9; }
+.race-action:hover:not(:disabled, [aria-disabled='true']) { background: #e4efe9; }
 button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
-button:disabled { background: transparent; border-color: #779185; color: #becec6; }
+button:disabled,
+button[aria-disabled='true'] {
+  background: transparent;
+  border-color: #779185;
+  color: #becec6;
+  cursor: default;
+}
 </style>

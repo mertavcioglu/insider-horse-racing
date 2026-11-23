@@ -19,30 +19,35 @@ const laneProgress = computed(() => {
   <section class="panel" aria-labelledby="track-title">
     <h2 id="track-title" class="panel-title">Race Track</h2>
     <div class="track">
+      <p class="track-status" role="status">
+        <template v-if="simulation">
+          <strong>Round {{ simulation.round.number }} · {{ simulation.round.distance }} m</strong>
+          <span v-if="status === 'paused'"> · Paused</span>
+          <span v-else-if="status === 'transition'"> · Complete. Round {{ simulation.round.number + 1 }} starts shortly.</span>
+          <span v-else-if="status === 'finished'"> · All rounds complete. Generate a new program to race again.</span>
+        </template>
+        <template v-else-if="status === 'ready'">Program ready. Select Start to begin round 1.</template>
+        <template v-else>Select Generate Program to create six rounds.</template>
+      </p>
       <div class="track-labels" aria-hidden="true"><span>Start</span><span>Finish</span></div>
       <ol class="lanes" aria-label="Race lanes">
         <li v-for="lane in LANE_COUNT" :key="lane">
-          <span class="lane-number" :aria-label="`Lane ${lane}`">{{ lane }}</span>
+          <span class="lane-number">{{ lane }}</span>
           <div v-if="simulation?.runners[lane - 1]" class="lane-course">
-            <div class="lane-travel" :style="{ transform: `translateX(${laneProgress[lane - 1] * 100}%)` }">
+            <div class="lane-travel" :style="{ '--progress': `${laneProgress[lane - 1] * 100}%` }">
               <span
                 class="horse-marker"
                 role="img"
-                :aria-label="simulation.runners[lane - 1].horse.name"
+                :aria-label="simulation.runners[lane - 1].horse.name + (laneProgress[lane - 1] === 1 ? ', finished' : '')"
                 :title="simulation.runners[lane - 1].horse.name"
                 :style="{ '--horse-color': simulation.runners[lane - 1].horse.color }"
                 data-runner
               >&#x265E;</span>
+              <span v-if="laneProgress[lane - 1] === 1" class="finish-label" aria-hidden="true">Finished</span>
             </div>
           </div>
         </li>
       </ol>
-      <p v-if="simulation" class="track-status" role="status">
-        Round {{ simulation.round.number }} · {{ simulation.round.distance }} m
-        <span v-if="status === 'paused'"> · Paused</span>
-        <span v-else-if="status === 'transition'"> · Complete. Round {{ simulation.round.number + 1 }} starts shortly.</span>
-        <span v-else-if="status === 'finished'"> · All rounds complete.</span>
-      </p>
     </div>
   </section>
 </template>
@@ -88,7 +93,7 @@ li + li { border-top: 1px dashed #96a77d; }
   padding-right: var(--marker-width);
   overflow: hidden;
 }
-.lane-travel { width: 100%; }
+.lane-travel { width: 100%; transform: translateX(var(--progress)); }
 .horse-marker {
   display: grid;
   place-items: center;
@@ -101,5 +106,13 @@ li + li { border-top: 1px dashed #96a77d; }
   font-size: 1.05rem;
   line-height: 1;
 }
-.track-status { margin: .75rem 0 0; color: var(--muted); font-size: .875rem; }
+.track-status { min-height: 1.25rem; margin: 0 0 .75rem; color: var(--muted); font-size: .875rem; }
+.track-status strong { color: #192a26; }
+.finish-label { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lane-course { padding-inline: .35rem; }
+  .lane-travel { display: flex; align-items: center; gap: .5rem; transform: none; }
+  .finish-label { display: inline; font-size: .75rem; font-weight: 650; }
+}
 </style>

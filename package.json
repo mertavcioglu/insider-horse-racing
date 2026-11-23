@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run tests/unit",
     "test:watch": "vitest tests/unit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test race.spec.ts",
+    "test:visual": "playwright test visual.spec.ts"
   },
   "dependencies": {
     "pinia": "^3.0.4",

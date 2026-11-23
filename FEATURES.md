@@ -15,7 +15,7 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 | Tur sonuçlarının sırasıyla gösterilmesi | Tamamlandı | Her turun sonucu son at bitirdiğinde Pinia'ya kaydedilir ve Sonuçlar paneline eklenir. Kaydırılabilir panel tur numarasını, mesafeyi, 10 atın bitiş sırasını, adını, rengini ve yarış saniyesi cinsinden süresini gösterir. Altı sonuç program tamamlandıktan sonra da görüntülenebilir. |
 | Merkezi durum, bileşenler ve kod yapısı | Tamamlandı | Pinia, atları, programı ve yarış durumunu tutar. Vue bileşenleri ekranı oluşturur. Saf TypeScript fonksiyonları yarış kurallarını, composable ise tarayıcı zamanlayıcısını yönetir. |
 | PDF bonusları: birim ve E2E testleri | Tamamlandı | Vitest hesaplamaları, Pinia geçişlerini ve zamanlayıcı yaşam döngüsünü doğrular. Playwright, altı turluk kullanıcı akışını Chromium'da doğrular. |
-| PDF bonusu: görsel regresyon testleri | Planlandı | Ekran görüntüsü karşılaştırması henüz kurulmadı. |
+| PDF bonusu: görsel regresyon testleri | Tamamlandı | Playwright, 1440 × 900 Windows Chromium referanslarıyla başlangıç ekranını, oluşturulan programı ve ilk tamamlanan turun sonucunu karşılaştırır. |
 
 ## B. Uygulama kararları ve eklenen davranışlar
 
@@ -24,7 +24,8 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 | PDF'deki at sayısı belirsizliği | Tamamlandı | PDF'de rastgele 1–20 at ifadesi ve toplam 20 at kuralı bulunuyor. Onaylanan yorum, uygulama açılışında her zaman 20 at oluşturmak ve kondisyonlarını rastgele belirlemek. |
 | At kimliği ve tur seçimi | Tamamlandı | Her atın benzersiz sayısal kimliği vardır. Adlar ve renkler sabit listelerden atanır. Her tur havuzun tamamından bağımsız bir çekiliş yapar. Aynı at farklı turlarda tekrar seçilebilir. |
 | Programı yenileme | Tamamlandı | **Generate Program** hazır ve tamamlanmış programı yenileyebilir. Yarış ilerlerken, duraklatılmışken ve turlar arasında düğme ve Pinia işlemi kilitlidir. Yeni program simülasyonu, yarış saatini ve sonuçları sıfırlar, at kimliklerini ve kondisyonları korur. Yeni Start birinci turdan başlar. |
-| Responsive yerleşim ve panel durumları | Tamamlandı | Geniş ekranda at listesi solda, numaralı pist ortada, Program ve Sonuçlar sağdadır. Dar ekranlarda paneller alt satırlara geçer. At listesi ve program tabloları kaydırılabilir. Program panelinde aktif, tamamlanan ve bekleyen turlar etiketlenir. Pist, program tamamlandığında durum mesajı gösterir. |
+| Responsive yerleşim ve panel durumları | Tamamlandı | Geniş ekranda at listesi solda, numaralı pist ortada, Program ve Sonuçlar sağdadır. Dar ekranlarda paneller alt satırlara geçer ve mobil at listesi daha kısa bir bölgede kaydırılır. Program paneli aktif tura kendi içinde kayar. Etiketler aktif, tamamlanan ve bekleyen turları ayırt eder. Pist üzerinde başlangıç yönlendirmesi, tur bilgisi ve program sonu mesajı bulunur. |
+| Klavye ve hareket azaltma | Tamamlandı | Kontroller klavyeyle çalışır ve görünür odak çizgisine sahiptir. Yarış düğmesi geçişte kullanılamaz ve mevcut odağı korur. Durum değişiklikleri pistteki canlı bölgede duyurulur. `prefers-reduced-motion` etkinse at işaretçileri sabit kalır ve bitirdiklerinde metinle belirtilir. Yarış saati ve sonuçlar aynı şekilde ilerler. |
 | Kondisyon bazlı hız | Tamamlandı | Kondisyon 1–100 aralığından 14–18 m/s temel hıza doğrusal olarak çevrilir. Her atın tur formu 0,88–1,12 çarpanı, üç eşit mesafe bölümünün temposu ise ayrı ayrı 0,95–1,05 çarpanı alır. Yüksek kondisyon avantaj sağlar, yakın kondisyonlu atlarda rastgelelik sıralamayı değiştirebilir. Simülasyon zamanı gerçek zamandan sekiz kat hızlıdır. Aynı hesap her altı mesafe için çalışır. |
 | Yarış saati ve pist animasyonu | Tamamlandı | Tek bir `requestAnimationFrame` döngüsü geçen süreyi günceller. Pist aynı hız parçalarından hesaplanan ilerleme yüzdesini kulvar genişliğine göre uygular. Pencere boyutu değişse de ilerleme oranı korunur. |
 | Yarış durumları ve tur geçişi | Tamamlandı | Pinia bekleme, hazır, çalışıyor, duraklatıldı, geçiş ve tamamlandı durumlarını yönetir. İlk beş turun sonucu kaydedildikten sonra pist 1,5 saniye bitiş konumunda kalır ve yarış kontrolü devre dışıdır. Sonraki tur sıfır süreyle ve yeni hız değerleriyle başlar. Uygulama bileşeni kaldırıldığında bekleyen kare ve geçiş zamanlayıcısı iptal edilir. |
@@ -36,6 +37,7 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 
 - `npm test` birim testlerini çalıştırır. Geliştirme sırasında `npm run test:watch` kullanılabilir. Testler tekrarlanabilir sonuçlar için sabit rastgelelik ve sanal zaman kullanır.
 - `npx playwright install chromium` tarayıcıyı hazırlar. `npm run test:e2e` Vite'ı başlatıp program oluşturma, Pause/Resume, altı turun sonuçları ve programı sıfırlama akışını test eder. Tarayıcı saati yalnızca test içinde ilerletilir.
+- `npm run test:visual` üç ekran durumunu kayıtlı Windows Chromium referanslarıyla karşılaştırır. Kurulum ve platform bilgisi için [README.md](README.md) dosyasına bak.
 - `npm run build` uygulamayla birlikte TypeScript test dosyalarını da tip denetiminden geçirir.
 
 ## Güncelleme kuralı
