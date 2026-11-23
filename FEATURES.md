@@ -14,7 +14,8 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 | Pistte at hareketi | Tamamlandı | Aktif turun numarası, mesafesi ve 10 katılımcısı pistte gösterilir. Atlar kendi kulvarında soldan sağa ilerler ve bitiş konumunda kalır. Yeni turda pist o turun katılımcılarını gösterir. |
 | Tur sonuçlarının sırasıyla gösterilmesi | Tamamlandı | Her turun sonucu son at bitirdiğinde Pinia'ya kaydedilir ve Sonuçlar paneline eklenir. Kaydırılabilir panel tur numarasını, mesafeyi, 10 atın bitiş sırasını, adını, rengini ve yarış saniyesi cinsinden süresini gösterir. Altı sonuç program tamamlandıktan sonra da görüntülenebilir. |
 | Merkezi durum, bileşenler ve kod yapısı | Tamamlandı | Pinia, atları, programı ve yarış durumunu tutar. Vue bileşenleri ekranı oluşturur. Saf TypeScript fonksiyonları yarış kurallarını, composable ise tarayıcı zamanlayıcısını yönetir. |
-| PDF bonusları | Planlandı | Vitest birim testleri ve zaman kalırsa Playwright E2E ve görsel regresyon testleri. Mevcut kontroller geçici doğrulama komutlarıyla çalıştırıldı. |
+| PDF bonusları: birim ve E2E testleri | Tamamlandı | Vitest hesaplamaları, Pinia geçişlerini ve zamanlayıcı yaşam döngüsünü doğrular. Playwright, altı turluk kullanıcı akışını Chromium'da doğrular. |
+| PDF bonusu: görsel regresyon testleri | Planlandı | Ekran görüntüsü karşılaştırması henüz kurulmadı. |
 
 ## B. Uygulama kararları ve eklenen davranışlar
 
@@ -30,6 +31,12 @@ Kaynak, Insider One'ın *Software Developer Assessment Project* PDF'sidir.
 | Pause ve Resume | Tamamlandı | Pause, tıklamaya kadarki yarış süresini kaydedip animasyonu durdurur. Resume zaman referansını yeniden alır ve o konumdan devam eder. Duraklamada geçen zaman yarışa eklenmez. Art arda tıklamalar ikinci bir animasyon döngüsü oluşturmaz. |
 | Bitiş zamanı ve eşitlik kuralı | Tamamlandı | Bir atın bitiş zamanı üç mesafe bölümünün süreleri toplanarak hesaplanır. Sıralama yuvarlanmamış bitiş zamanına göre yapılır. Tam eşitlikte küçük kulvar numarası öne geçer. Panel süreyi iki ondalık basamakla gösterir. |
 | Proje altyapısı | Tamamlandı | Vue 3 Composition API ve `<script setup>`, TypeScript, Vite, Pinia ve CSS kullanılır. `npm run build` önce Vue ve TypeScript tiplerini denetler, ardından üretim paketini oluşturur. |
+
+## Otomatik testleri çalıştırma
+
+- `npm test` birim testlerini çalıştırır. Geliştirme sırasında `npm run test:watch` kullanılabilir. Testler tekrarlanabilir sonuçlar için sabit rastgelelik ve sanal zaman kullanır.
+- `npx playwright install chromium` tarayıcıyı hazırlar. `npm run test:e2e` Vite'ı başlatıp program oluşturma, Pause/Resume, altı turun sonuçları ve programı sıfırlama akışını test eder. Tarayıcı saati yalnızca test içinde ilerletilir.
+- `npm run build` uygulamayla birlikte TypeScript test dosyalarını da tip denetiminden geçirir.
 
 ## Güncelleme kuralı
 
