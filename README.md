@@ -20,8 +20,8 @@ A browser-based horse racing simulator for the Insider One frontend assessment. 
 - A 10-lane track with Start, Pause, and Resume controls. The program advances automatically after each round.
 - Stop with confirmation, preserving completed results, and a 0.5x, 1x, or 2x viewing speed that leaves race outcomes unchanged.
 - Original, color-coded SVG horse silhouettes and a live leaderboard with progress and position changes.
-- Results published after the last horse finishes each round, with ranked horses and simulated finish times.
-- A gold, silver, and bronze podium for the latest completed round, alongside the full results tables.
+- Expandable program and results panels, with all 10 official finish times available after each round and badges for the top three ranks.
+- A track-side winner announcement during each round transition and after the final round.
 - Keyboard-operable controls, responsive panels, and fixed markers with finish indicators when reduced motion is requested.
 
 See [FEATURES.md](FEATURES.md) for the current feature inventory and the distinction between assessment requirements and implementation decisions.
@@ -71,7 +71,7 @@ npm run test:e2e
 npm run test:visual
 ```
 
-Vitest covers the simulation, live ranking, participant selection, store transitions, and timer behavior across speed changes and Stop confirmation. Playwright covers the full six-round flow, Stop and speed controls, standings, podium, SVG markers, keyboard operation, reduced motion, and responsive widths. Screenshot comparisons cover the initial dashboard, generated program, and first completed round. Browser tests use seeded randomness and a controlled clock.
+Vitest covers the simulation, live ranking, participant selection, store transitions, and timer behavior across speed changes and Stop confirmation. Playwright covers the full six-round flow, Stop and speed controls, standings, accordions, winner announcements, rank badges, SVG markers, keyboard operation, reduced motion, and responsive widths. Screenshot comparisons cover the initial dashboard, generated program, and first completed round. Browser tests use seeded randomness and a controlled clock.
 
 The committed screenshots use Windows Chromium at 1440 × 900. Run comparisons on that platform for the supplied baselines. If maintaining baselines on another platform, review them locally after running `npm run test:visual -- --update-snapshots`.
 

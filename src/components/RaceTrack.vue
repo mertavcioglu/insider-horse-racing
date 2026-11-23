@@ -7,7 +7,14 @@ import { useRaceStore } from '../stores/race'
 import GallopingHorse from './GallopingHorse.vue'
 import LiveLeaderboard, { type Standing } from './LiveLeaderboard.vue'
 
-const { simulation, elapsedMs, status } = storeToRefs(useRaceStore())
+const { simulation, elapsedMs, status, results } = storeToRefs(useRaceStore())
+
+const winningResult = computed(() => {
+  if (status.value !== 'transition' && status.value !== 'finished') return
+  const result = results.value.at(-1)
+  if (result?.round === simulation.value?.round.number) return result
+})
+const winner = computed(() => winningResult.value?.entries[0])
 
 const positions = computed(() => {
   const race = simulation.value
@@ -39,17 +46,22 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
   <section class="panel" aria-labelledby="track-title">
     <h2 id="track-title" class="panel-title">Race Track</h2>
     <div class="track">
-      <p class="track-status" role="status">
-        <template v-if="simulation">
+      <div class="track-status" :class="{ 'winner-announcement': winner }" role="status">
+        <template v-if="winningResult && winner">
+          <strong class="winner-round">Round {{ winningResult.round }} · {{ winningResult.distance }} m completed</strong>
+          <strong class="winner-name">Winner: {{ winner.horse.name }}!</strong>
+          <span class="winner-time">{{ winner.finishSeconds.toFixed(2) }} seconds</span>
+          <span v-if="status === 'transition'">Round {{ winningResult.round + 1 }} starts shortly.</span>
+          <span v-else>All rounds complete. Generate a new program to race again.</span>
+        </template>
+        <template v-else-if="simulation">
           <strong>Round {{ simulation.round.number }} · {{ simulation.round.distance }} m</strong>
           <span v-if="status === 'paused'"> · Paused</span>
-          <span v-else-if="status === 'transition'"> · Complete. Round {{ simulation.round.number + 1 }} starts shortly.</span>
-          <span v-else-if="status === 'finished'"> · All rounds complete. Generate a new program to race again.</span>
         </template>
         <template v-else-if="status === 'stopped'">Race stopped. Select Generate Program to race again.</template>
         <template v-else-if="status === 'ready'">Program ready. Select Start to begin round 1.</template>
         <template v-else>Select Generate Program to create six rounds.</template>
-      </p>
+      </div>
       <div class="track-labels" aria-hidden="true"><span>Start</span><span>Finish</span></div>
       <ol class="lanes" aria-label="Race lanes">
         <li v-for="lane in LANE_COUNT" :key="lane">
@@ -128,6 +140,21 @@ li + li { border-top: 1px dashed #96a77d; }
 .horse-marker svg { display: block; width: 100%; height: 100%; }
 .track-status { min-height: 1.25rem; margin: 0 0 .75rem; color: var(--muted); font-size: .875rem; }
 .track-status strong { color: #192a26; }
+.winner-announcement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .15rem .55rem;
+  padding: .55rem .7rem;
+  border: 1px solid #e5d4a7;
+  border-inline-start: .25rem solid #a67c29;
+  border-radius: .35rem;
+  background: #faf5e8;
+  color: #5d4a26;
+}
+.winner-round { flex-basis: 100%; font-size: .75rem; text-transform: uppercase; }
+.winner-name { font-size: 1rem; }
+.winner-time { font-variant-numeric: tabular-nums; }
 .finish-label { display: none; }
 
 @media (prefers-reduced-motion: reduce) {

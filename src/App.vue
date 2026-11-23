@@ -90,6 +90,18 @@ table { width: 100%; border-collapse: collapse; font-size: .8125rem; text-align:
 th, td { padding: .48rem .65rem; border-bottom: 1px solid var(--line); }
 thead { background: #f5f7f6; color: var(--muted); }
 
+@media (width > 60rem) {
+  .dashboard { align-items: stretch; }
+  .dashboard .panel { display: flex; flex-direction: column; }
+  .dashboard .table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    /* Let the track determine the row height and scroll long lists inside their cards. */
+    contain: size;
+  }
+}
+
 @media (max-width: 60rem) {
   .dashboard { grid-template-columns: minmax(13rem, 1fr) minmax(0, 2fr); }
   .race-details { grid-column: 1 / -1; }

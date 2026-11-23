@@ -24,13 +24,21 @@
 
 **Trade-offs** — Browsers can throttle background frames. When frames resume, elapsed time may move the active round forward. Pause explicitly excludes paused time.
 
-## Live leaderboard and podium
+## Live leaderboard
 
-**Decision** — Sample the track's progress data about four times per second and rank those positions. Break in-progress ties by lane. Order finished horses by the official finish-time comparator. Build the podium from the latest completed result's first three entries.
+**Decision** — Sample the track's progress data about four times per second at 1x and rank those positions. Break in-progress ties by lane. Order finished horses by the official finish-time comparator.
 
-**Rationale** — The live board and visuals share the simulation's positions. The final sampled ranking and podium agree with the official results. Rank-change history belongs to the track view.
+**Rationale** — The live board and visuals share the simulation's positions. The final sampled ranking agrees with the official results. Rank-change history belongs to the track view.
 
-**Trade-offs** — The board can lag the frame-rendered track by a sample interval and can skip brief overtakes. The latest podium limits right-panel height while every official result remains available in the tables.
+**Trade-offs** — The board can lag the frame-rendered track by a sample interval and can skip brief overtakes.
+
+## Program and results presentation
+
+**Decision** — Use one open section per panel, with local expansion state. Render rank badges in the official results table and derive the track announcement from its first entry and the existing transition or finished state.
+
+**Rationale** — Collapsed headers make rounds easier to scan, and the official data remains the source for tables and winner notices. The announcement uses the existing transition window, so timing remains consistent with Stop and playback speed.
+
+**Trade-offs** — Each new active round or completed result opens its section automatically. At desktop widths the track determines the shared row height, and the other panels scroll internally when their contents exceed that height.
 
 ## Stop and playback speed
 
