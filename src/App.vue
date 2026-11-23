@@ -29,7 +29,7 @@ const { toggleRace, requestStop, resolveStop, changeSpeed, stopConfirmationOpen 
 
     <main class="dashboard">
       <HorseList :horses="horses" />
-      <RaceTrack />
+      <RaceTrack :stop-confirmation-open="stopConfirmationOpen" />
       <div class="race-details">
         <RaceProgram :rounds="rounds" :active-round="activeRound" :completed-count="results.length" />
         <RaceResults :results="results" />

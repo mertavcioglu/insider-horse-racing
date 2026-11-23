@@ -1,13 +1,28 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { LANE_COUNT } from '../domain/raceProgram'
 import { getRaceProgress, rankRacePositions } from '../domain/raceSimulation'
 import { useRaceStore } from '../stores/race'
 import GallopingHorse from './GallopingHorse.vue'
 import LiveLeaderboard, { type Standing } from './LiveLeaderboard.vue'
 
-const { simulation, elapsedMs, status, results } = storeToRefs(useRaceStore())
+const props = defineProps<{ stopConfirmationOpen: boolean }>()
+const { simulation, elapsedMs, status, results, playbackSpeed } = storeToRefs(useRaceStore())
+const moving = computed(() => status.value === 'running' && !props.stopConfirmationOpen)
+
+const hoveredLane = ref<number>()
+const focusedLane = ref<number>()
+const inspectedLane = computed(() => focusedLane.value ?? hoveredLane.value)
+
+function dismissHorseInfo() {
+  hoveredLane.value = undefined
+  focusedLane.value = undefined
+}
+
+function hoverHorse(event: PointerEvent, lane: number) {
+  if (event.pointerType !== 'touch') hoveredLane.value = lane
+}
 
 const winningResult = computed(() => {
   if (status.value !== 'transition' && status.value !== 'finished') return
@@ -34,9 +49,9 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
   const previousRanks = new Map(
     race === previousRace ? standings.value.map(({ horse }, index) => [horse.id, index]) : [],
   )
-  standings.value = rankRacePositions(positions.value).map(({ runner: { horse }, progress }, index) => ({
+  if (race !== previousRace) dismissHorseInfo()
+  standings.value = rankRacePositions(positions.value).map(({ runner: { horse } }, index) => ({
     horse,
-    percent: progress === 1 ? 100 : Math.floor(progress * 100),
     change: (previousRanks.get(horse.id) ?? index) - index,
   }))
 })
@@ -64,24 +79,33 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
       </div>
       <div class="track-labels" aria-hidden="true"><span>Start</span><span>Finish</span></div>
       <ol class="lanes" aria-label="Race lanes">
-        <li v-for="lane in LANE_COUNT" :key="lane">
-          <span class="lane-number">{{ lane }}</span>
-          <div v-if="positions[lane - 1]" class="lane-course">
-            <div class="lane-travel" :style="{ '--progress': `${positions[lane - 1].progress * 100}%` }">
-              <span
-                class="horse-marker"
-                role="img"
-                :aria-label="positions[lane - 1].runner.horse.name + (positions[lane - 1].progress === 1 ? ', finished' : '')"
-                :title="positions[lane - 1].runner.horse.name"
-                :style="{ '--horse-color': positions[lane - 1].runner.horse.color }"
-                data-runner
-              ><GallopingHorse /></span>
-              <span v-if="positions[lane - 1].progress === 1" class="finish-label" aria-hidden="true">Finished</span>
+        <li v-for="(position, index) in simulation ? positions : LANE_COUNT" :key="index">
+          <span class="lane-number">{{ index + 1 }}</span>
+          <template v-if="typeof position !== 'number'">
+            <div class="lane-course">
+              <div class="lane-travel" :style="{ '--progress': `${position.progress * 100}%` }">
+                <button type="button" class="horse-marker"
+                  :aria-label="position.runner.horse.name + (position.progress === 1 ? ', finished' : '')"
+                  :aria-describedby="`horse-info-${index + 1}`"
+                  :style="{ '--horse-color': position.runner.horse.color }"
+                  @pointerenter="hoverHorse($event, index + 1)" @pointerleave="hoveredLane = undefined"
+                  @focus="focusedLane = index + 1" @blur="focusedLane = undefined"
+                  @click="focusedLane = index + 1" @keydown.esc="dismissHorseInfo">
+                  <GallopingHorse :gait="position.progress < 1" :paused="!moving" />
+                </button>
+                <span v-if="position.progress === 1" class="finish-label" aria-hidden="true">Finished</span>
+              </div>
             </div>
-          </div>
+            <div v-show="inspectedLane === index + 1" :id="`horse-info-${index + 1}`"
+              class="horse-info" :class="{ 'horse-info-start': position.progress >= .5 }" role="tooltip">
+              <strong>{{ position.runner.horse.name }}</strong>
+              <span>Lane {{ index + 1 }} · Condition {{ position.runner.horse.condition }}/100</span>
+            </div>
+          </template>
         </li>
       </ol>
-      <LiveLeaderboard v-if="standings.length" :standings="standings"
+      <LiveLeaderboard v-if="standings.length" :key="simulation?.round.number" :standings="standings"
+        :animate="moving" :fast="playbackSpeed === 2"
         :complete="status === 'transition' || status === 'finished'" />
     </div>
   </section>
@@ -107,7 +131,7 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
   border-block: 1px solid var(--line);
   background: #edf2df;
 }
-li { display: flex; min-height: clamp(2rem, 5vh, 3rem); }
+li { position: relative; display: flex; min-height: clamp(2rem, 5vh, 3rem); }
 li:nth-child(even) { background: #e5ecd5; }
 li + li { border-top: 1px dashed #96a77d; }
 .lane-number {
@@ -135,9 +159,32 @@ li + li { border-top: 1px dashed #96a77d; }
   width: var(--marker-width);
   flex: 0 0 var(--marker-width);
   height: 1.7rem;
+  padding: 0;
+  border: 0;
+  border-radius: .2rem;
+  background: transparent;
   color: var(--horse-color);
+  cursor: pointer;
 }
+.horse-marker:focus-visible { outline: 2px solid #36574b; outline-offset: -2px; }
 .horse-marker svg { display: block; width: 100%; height: 100%; }
+.horse-info {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 50%;
+  inset-inline-end: .4rem;
+  transform: translateY(-50%);
+  max-width: calc(100% - 3rem);
+  padding: .15rem .4rem;
+  border-radius: .3rem;
+  background: #192a26;
+  color: #fff;
+  font-size: .6875rem;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.horse-info-start { inset-inline-start: 2.4rem; inset-inline-end: auto; }
+.horse-info strong { display: block; font-size: .75rem; }
 .track-status { min-height: 1.25rem; margin: 0 0 .75rem; color: var(--muted); font-size: .875rem; }
 .track-status strong { color: #192a26; }
 .winner-announcement {
@@ -161,5 +208,6 @@ li + li { border-top: 1px dashed #96a77d; }
   .lane-course { padding-inline: .35rem; }
   .lane-travel { display: flex; align-items: center; gap: .5rem; transform: none; }
   .finish-label { display: inline; font-size: .75rem; font-weight: 650; }
+  .horse-info { inset-inline-start: auto; inset-inline-end: .4rem; }
 }
 </style>

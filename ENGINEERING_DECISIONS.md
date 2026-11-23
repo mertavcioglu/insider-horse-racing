@@ -32,6 +32,14 @@
 
 **Trade-offs** — The board can lag the frame-rendered track by a sample interval and can skip brief overtakes.
 
+## Decorative motion and runner details
+
+**Decision** — Keep the gait in stepped CSS over three leg poses and a fixed SVG body. Use Vue TransitionGroup to move leaderboard rows keyed by horse ID. Keep runner information in a lane-local tooltip.
+
+**Rationale** — The simulation already supplies motion state, horizontal position, and rank. Visual effects use that state without scheduling another race clock. The tooltip uses the current runner and the lane edges for positioning.
+
+**Trade-offs** — Gait cadence is fixed across playback speeds to keep the pose stable on speed changes. The rank transition shortens at 2x. Large rank changes settle immediately to limit crossing rows, and Pause or Stop confirmation cancels in-flight transitions. Reduced motion suppresses both effects.
+
 ## Program and results presentation
 
 **Decision** — Use one open section per panel, with local expansion state. Render rank badges in the official results table and derive the track announcement from its first entry and the existing transition or finished state.

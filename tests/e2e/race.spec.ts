@@ -36,7 +36,9 @@ test('runs six rounds, pauses and resumes, and resets the results for a new prog
   await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
   await expect(page.getByRole('status')).toContainText('Round 1')
   await expect(runners).toHaveCount(10)
-  await expect(live.locator('.progress')).toHaveText(Array(10).fill('0%'))
+  expect(await runners.evaluateAll(nodes => nodes.map(node => getComputedStyle(node).getPropertyValue('--progress'))))
+    .toEqual(Array(10).fill('0%'))
+  await expect(live).not.toContainText('%')
   await expect(generate).toBeDisabled()
   await page.clock.runFor(320)
   await page.getByRole('button', { name: 'Pause', exact: true }).press('Enter')
@@ -59,8 +61,9 @@ test('runs six rounds, pauses and resumes, and resets the results for a new prog
     await expect(page.locator('#program-title + .table-scroll .round-trigger[aria-expanded="true"]')).toHaveCount(1)
     if (index > 0) {
       await expect(live.locator('.standing-name')).toHaveText(lineup)
-      await expect(live.locator('.progress')).toHaveText(Array(10).fill('0%'))
-      await expect(live.getByRole('img', { name: 'Unchanged' })).toHaveCount(10)
+      expect(await runners.evaluateAll(nodes => nodes.map(node => getComputedStyle(node).getPropertyValue('--progress'))))
+        .toEqual(Array(10).fill('0%'))
+      await expect(live.locator('.change')).toHaveCount(0)
     }
 
     // A jump beyond the slowest possible finish triggers the pending animation frame once.
@@ -78,7 +81,9 @@ test('runs six rounds, pauses and resumes, and resets the results for a new prog
     const times = timeLabels.map(Number)
     expect(times).toEqual([...times].sort((a, b) => a - b))
     await expect(live.locator('.standing-name')).toHaveText(names)
-    await expect(live.locator('.progress')).toHaveText(Array(10).fill('100%'))
+    expect(await runners.evaluateAll(nodes => nodes.map(node => getComputedStyle(node).getPropertyValue('--progress'))))
+      .toEqual(Array(10).fill('100%'))
+    await expect(live.locator('.change')).toHaveCount(0)
     await expect(resultHeaders.nth(index)).toContainText(`Winner: ${names[0]}`)
     await expect(winner.locator('.winner-name')).toHaveText(`Winner: ${names[0]}!`)
     await expect(winner.locator('.winner-time')).toHaveText(`${timeLabels[0]} seconds`)
@@ -306,22 +311,23 @@ test('mirrors lane progress and horse colors in the live standings', async ({ pa
   const standings = page.locator('.standings li')
   const progress = () => page.locator('.lane-travel').evaluateAll(nodes => nodes.map((node, index) => ({
     lane: index + 1,
-    name: node.querySelector('.horse-marker')?.getAttribute('title'),
+    name: node.querySelector('.horse-marker')?.getAttribute('aria-label'),
     percent: Number.parseFloat(getComputedStyle(node).getPropertyValue('--progress')),
   })))
   expect(await visibleRunners.evaluateAll(nodes =>
-    nodes.map(node => [node.getAttribute('title'), getComputedStyle(node.querySelector('svg')!).fill]),
+    nodes.map(node => [node.getAttribute('aria-label'), getComputedStyle(node.querySelector('svg')!).fill]),
   )).toEqual(lineup.map(name => [name.trim(), rosterColors.find(horse => horse.name === name.trim())?.color]))
   await page.clock.runFor(265)
   expect(await page.getByRole('img', { name: /^Up \d/ }).count()).toBeGreaterThan(0)
   expect(await page.getByRole('img', { name: /^Down \d/ }).count()).toBeGreaterThan(0)
   await page.clock.runFor(535)
-  await expect(standings.first().getByRole('img', { name: 'Unchanged' })).toBeVisible()
+  await expect(standings.first().locator('.change')).toHaveCount(0)
   await page.getByRole('button', { name: 'Pause', exact: true }).press('Enter')
   const markers = await progress()
   const ordered = [...markers].sort((a, b) => b.percent - a.percent || a.lane - b.lane)
   await expect(standings.locator('.standing-name')).toHaveText(ordered.map(row => row.name ?? ''))
-  await expect(standings.locator('.progress')).toHaveText(ordered.map(row => `${Math.floor(row.percent)}%`))
+  await expect(page.locator('.standings')).not.toContainText('%')
+  await expect(page.locator('.standings .leading')).toHaveCount(3)
   const frozen = await standings.allTextContents()
   await page.clock.runFor(2000)
   expect(await progress()).toEqual(markers)
@@ -338,7 +344,7 @@ test('mirrors lane progress and horse colors in the live standings', async ({ pa
   }
   await page.getByRole('button', { name: 'Resume', exact: true }).press('Enter')
   await page.clock.runFor(500)
-  expect(await standings.allTextContents()).not.toEqual(frozen)
+  expect(await progress()).not.toEqual(markers)
 })
 
 test('supports keyboard controls and fixed race markers with reduced motion', async ({ page, openRace }) => {
@@ -358,6 +364,8 @@ test('supports keyboard controls and fixed race markers with reduced motion', as
   expect(await page.locator('.lane-travel').evaluateAll(nodes =>
     nodes.every(node => getComputedStyle(node).transform === 'none'),
   )).toBe(true)
+  await expect(page.locator('.legs.extended').first()).toHaveCSS('animation-name', 'none')
+  await expect(page.locator('.standings .rank-move')).toHaveCount(0)
 
   await page.clock.fastForward(25_000)
   const next = page.getByRole('button', { name: 'Next Round Soon' })
@@ -370,4 +378,117 @@ test('supports keyboard controls and fixed race markers with reduced motion', as
   await page.clock.runFor(1500)
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeFocused()
   await expect(page.getByRole('status')).toContainText('Round 2')
+})
+
+test('uses three fixed-body gait poses and stops decorative motion with the race controls', async ({ page, openRace }) => {
+  await openRace()
+  await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
+  await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+  const horse = page.locator('.horse-marker').first()
+  const legs = horse.locator('.legs')
+  const running = page.locator('.standings')
+  await expect(legs).toHaveCount(3)
+  await expect(legs.first()).toHaveCSS('animation-play-state', 'running')
+  const frames = await horse.evaluate(button => {
+    const svg = button.querySelector('svg')!
+    const poses = [...svg.querySelectorAll('.legs')]
+    const body = svg.querySelector('g > path:last-child')!
+    const animations = svg.getAnimations({ subtree: true })
+    const originalBody = body.getBoundingClientRect().toJSON()
+    const samples = [5, 165, 325].map(time => {
+      for (const animation of animations) {
+        animation.pause()
+        animation.currentTime = time
+      }
+      return {
+        visible: poses.map(pose => getComputedStyle(pose).opacity),
+        stationary: JSON.stringify(body.getBoundingClientRect().toJSON()) === JSON.stringify(originalBody),
+      }
+    })
+    for (const animation of animations) animation.play()
+    return samples
+  })
+  expect(frames.map(frame => frame.visible)).toEqual([['1', '0', '0'], ['0', '1', '0'], ['0', '0', '1']])
+  expect(frames.every(frame => frame.stationary)).toBe(true)
+
+  await page.clock.runFor(265)
+  const moved = running.locator('.rank-move').first()
+  await expect(moved).toHaveCount(0)
+  for (let sample = 0; sample < 100 && !await moved.count(); sample++) {
+    await page.clock.runFor(250)
+  }
+  await expect(moved).toHaveCSS('transition-duration', '0.16s')
+  const names = await running.locator('.standing-name').allTextContents()
+  await page.getByRole('button', { name: 'Pause', exact: true }).press('Enter')
+  await expect(legs.first()).toHaveCSS('animation-play-state', 'paused')
+  await expect(running).not.toHaveClass(/animated/)
+  await page.clock.runFor(1000)
+  expect(await running.locator('.standing-name').allTextContents()).toEqual(names)
+  await page.getByRole('button', { name: 'Resume', exact: true }).press('Enter')
+  await expect(legs.first()).toHaveCSS('animation-play-state', 'running')
+  const stop = page.getByRole('button', { name: 'Stop', exact: true })
+  await stop.press('Enter')
+  await expect(legs.first()).toHaveCSS('animation-play-state', 'paused')
+  await expect(running).not.toHaveClass(/animated/)
+  await page.keyboard.press('Escape')
+  await expect(legs.first()).toHaveCSS('animation-play-state', 'running')
+  await page.clock.fastForward(25_000)
+  await expect(legs.first()).toHaveCSS('animation-name', 'none')
+  await expect(running).not.toHaveClass(/animated/)
+  await stop.press('Enter')
+  await page.getByRole('button', { name: 'End Race' }).press('Enter')
+  await expect(horse).toHaveCount(0)
+})
+
+test('reveals the correct horse information on hover and keyboard focus without changing the race', async ({ page, openRace }) => {
+  await openRace()
+  await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
+  await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+  await page.clock.runFor(400)
+  const marker = page.locator('.horse-marker').nth(3)
+  const name = await marker.getAttribute('aria-label')
+  const condition = await page.locator('.horse-list tbody tr').filter({ hasText: name! }).locator('td').innerText()
+  const tooltip = page.getByRole('tooltip')
+  await marker.hover()
+  await expect(tooltip).toContainText(name!)
+  await expect(tooltip).toContainText(`Lane 4 · Condition ${condition}/100`)
+  await expect(marker).toHaveAccessibleDescription(`${name} Lane 4 · Condition ${condition}/100`)
+  const progress = () => marker.evaluate(node =>
+    getComputedStyle(node.parentElement!).getPropertyValue('--progress'))
+  const before = await progress()
+  await page.clock.runFor(300)
+  expect(await progress()).not.toEqual(before)
+  await page.mouse.move(0, 0)
+  await marker.focus()
+  await expect(tooltip).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(tooltip).toHaveCount(0)
+  await expect(marker).toBeFocused()
+
+  await page.clock.fastForward(25_000)
+  await page.setViewportSize({ width: 375, height: 850 })
+  await marker.blur()
+  await marker.focus()
+  await expect(tooltip).toBeVisible()
+  await expect(tooltip).toHaveClass(/horse-info-start/)
+  const tooltipBox = await tooltip.boundingBox()
+  const laneBox = await page.locator('.lanes li').nth(3).boundingBox()
+  expect(tooltipBox!.x).toBeGreaterThanOrEqual(laneBox!.x)
+  expect(tooltipBox!.x + tooltipBox!.width).toBeLessThanOrEqual(laneBox!.x + laneBox!.width)
+})
+
+test.describe('touch controls', () => {
+  test.use({ hasTouch: true, viewport: { width: 375, height: 850 } })
+
+  test('opens horse information when tapping its marker', async ({ page, openRace }) => {
+    await openRace()
+    await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
+    await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+    const marker = page.locator('.horse-marker').first()
+    await marker.tap()
+    await expect(page.getByRole('tooltip')).toContainText('Lane 1 · Condition')
+    await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeEnabled()
+    await page.getByRole('heading', { name: 'Race Track' }).tap()
+    await expect(page.getByRole('tooltip')).toHaveCount(0)
+  })
 })

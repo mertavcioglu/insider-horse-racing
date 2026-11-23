@@ -7,5 +7,6 @@
 - Freeze scheduled work while Stop confirmation is open and preserve only the remaining transition delay on cancel. Apply playback speed to frame deltas and keep official finish calculations and real-time transition delays independent of playback.
 - Prefer focused changes and existing modules. Add dependencies only for a concrete requirement.
 - Keep accordion expansion local to the view. Derive winner notices and rank badges from official results and reuse the existing transition state for announcement timing.
+- Keep gait and rank transitions decorative. Use existing running and Stop-confirmation state, respect reduced motion, and keep horse details reachable by keyboard.
 - After relevant changes, run `npm run build` and `npm test`. For UI and flow changes, install Chromium with `npx playwright install chromium`, then run `npm run test:e2e` and `npm run test:visual`. Inspect visual differences before updating baselines. The committed baselines target Windows Chromium.
 - Keep FEATURES.md consistent with shipped behavior, including its assessment requirements and enhancements sections. Update README.md for usage or setup changes and ENGINEERING_DECISIONS.md for meaningful architecture decisions.

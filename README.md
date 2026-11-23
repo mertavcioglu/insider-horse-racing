@@ -19,7 +19,7 @@ A browser-based horse racing simulator for the Insider One frontend assessment. 
 - Six rounds with 10 randomly selected horses each, covering 1,200 to 2,200 metres in 200-metre increments.
 - A 10-lane track with Start, Pause, and Resume controls. The program advances automatically after each round.
 - Stop with confirmation, preserving completed results, and a 0.5x, 1x, or 2x viewing speed that leaves race outcomes unchanged.
-- Original, color-coded SVG horse silhouettes and a live leaderboard with progress and position changes.
+- Color-coded SVG horses with a three-pose gait, on-demand runner details, and a live leaderboard that highlights changes in rank.
 - Expandable program and results panels, with all 10 official finish times available after each round and badges for the top three ranks.
 - A track-side winner announcement during each round transition and after the final round.
 - Keyboard-operable controls, responsive panels, and fixed markers with finish indicators when reduced motion is requested.
@@ -71,7 +71,7 @@ npm run test:e2e
 npm run test:visual
 ```
 
-Vitest covers the simulation, live ranking, participant selection, store transitions, and timer behavior across speed changes and Stop confirmation. Playwright covers the full six-round flow, Stop and speed controls, standings, accordions, winner announcements, rank badges, SVG markers, keyboard operation, reduced motion, and responsive widths. Screenshot comparisons cover the initial dashboard, generated program, and first completed round. Browser tests use seeded randomness and a controlled clock.
+Vitest covers the simulation, live ranking, participant selection, store transitions, and race timing. Playwright covers the six-round flow, controls, results, gait and rank transitions, runner details, keyboard and touch interaction, reduced motion, and responsive widths. Screenshot comparisons cover the initial dashboard, generated program, and first completed round. Browser tests use seeded randomness and a controlled clock.
 
 The committed screenshots use Windows Chromium at 1440 × 900. Run comparisons on that platform for the supplied baselines. If maintaining baselines on another platform, review them locally after running `npm run test:visual -- --update-snapshots`.
 
