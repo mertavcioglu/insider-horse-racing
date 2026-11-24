@@ -68,20 +68,19 @@ const raceLabels: Record<RaceStatus, string> = {
       </button>
       <div class="speed">
         <label for="race-speed">Race Speed</label>
-        <button class="speed-info-button" type="button" popovertarget="speed-info"
-          aria-controls="speed-info" aria-label="Explain simulation speed">
-          <span aria-hidden="true">i</span>
-        </button>
-        <select id="race-speed" :value="playbackSpeed" @change="selectSpeed">
+        <span class="speed-help">
+          <span class="speed-info-icon" aria-hidden="true">i</span>
+          <span id="speed-info" class="speed-info" role="tooltip">
+            <strong>Simulation Speed</strong>
+            <span>At 1x playback speed, 1 real second equals {{ TIME_SCALE }} simulated race seconds.</span>
+            <span>Playback speed changes only how quickly the race is displayed. Official finish times and rankings remain unchanged.</span>
+          </span>
+        </span>
+        <select id="race-speed" :value="playbackSpeed" aria-describedby="speed-info" @change="selectSpeed">
           <option v-for="speed in PLAYBACK_SPEEDS" :key="speed" :value="speed">{{ speed }}x</option>
         </select>
       </div>
     </div>
-    <section id="speed-info" class="speed-info" popover aria-labelledby="speed-info-title">
-      <h2 id="speed-info-title">Simulation Speed</h2>
-      <p>At 1x playback speed, 1 real second equals {{ TIME_SCALE }} simulated race seconds.</p>
-      <p>Playback speed changes only how quickly the race is displayed. Official finish times and rankings remain unchanged.</p>
-    </section>
     <dialog ref="confirmation" aria-labelledby="stop-title" aria-describedby="stop-description"
       @cancel.prevent="emit('resolveStop', false)">
       <h2 id="stop-title">End Current Race?</h2>
@@ -107,7 +106,7 @@ const raceLabels: Record<RaceStatus, string> = {
   padding: 1rem;
   background: #172d26;
   color: #fff;
-  anchor-name: --race-header;
+  position: relative;
 }
 h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.025em; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
@@ -120,43 +119,58 @@ button, select {
   font-weight: 650;
 }
 .speed { display: flex; align-items: center; gap: .45rem; font-size: .875rem; }
-.speed-info-button {
+.speed-help {
   display: grid;
   place-items: center;
-  min-height: 2.75rem;
   width: 1.75rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  min-height: 2.75rem;
   color: #e9f3ed;
-  cursor: pointer;
+  anchor-name: --race-speed-info;
 }
-.speed-info-button span {
+.speed-info-icon {
   width: 1rem;
   height: 1rem;
   border: 1px solid currentColor;
   border-radius: 50%;
   font-size: .6875rem;
+  font-weight: 650;
   line-height: .875rem;
+  text-align: center;
 }
-.speed-info-button:hover span { background: #36574b; }
 .speed-info {
-  position: fixed;
-  position-anchor: --race-header;
-  inset: 9.5rem 1rem auto auto;
-  top: calc(anchor(bottom, 9rem) + .5rem);
-  margin: 0;
+  position: absolute;
+  z-index: 2;
+  inset: calc(100% + .25rem) 1rem auto auto;
   width: min(19rem, calc(100vw - 2rem));
-  padding: .9rem;
+  padding: .65rem .75rem;
   border: 1px solid var(--line);
-  border-radius: .55rem;
+  border-radius: .45rem;
   background: var(--surface);
   color: #192a26;
   box-shadow: 0 .35rem 1rem #172d2626;
-  font-size: .875rem;
+  font-size: .8125rem;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
-.speed-info h2 { margin: 0; font-size: .95rem; }
-.speed-info p { margin: .45rem 0 0; color: var(--muted); }
+.speed-info strong { display: block; font-size: .875rem; }
+.speed-info > span { display: block; margin-top: .35rem; color: var(--muted); }
+
+@supports (position-try-fallbacks: flip-block) and (bottom: anchor(top)) {
+  .speed-info {
+    position: fixed;
+    position-anchor: --race-speed-info;
+    inset: auto 1rem calc(anchor(top) + .25rem) auto;
+    right: clamp(1rem, calc(anchor(center) - 9.5rem), max(1rem, calc(100vw - 20rem)));
+    position-try-fallbacks: flip-block;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .speed-help:hover .speed-info { visibility: visible; opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .speed-info { transition: opacity 120ms ease, visibility 120ms; }
+}
 .speed select { font-family: inherit; background: #244238; color: white; border-color: #779185; }
 .stop { background: transparent; color: #ffd9d5; border-color: #da8f85; cursor: pointer; }
 .stop:hover:not(:disabled) { background: #56312e; }

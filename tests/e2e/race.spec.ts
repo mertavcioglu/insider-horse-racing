@@ -664,28 +664,41 @@ test('runs at 4x without moving ranks decoratively or shortening the transition'
   await expect(speed).toHaveValue('1')
 })
 
-test('opens simulation speed help by keyboard and keeps it within all viewport widths', async ({ page, openRace }) => {
+
+test('shows speed help on hover without pinning on click or moving the layout', async ({ page, openRace }) => {
   await openRace()
-  const help = page.getByRole('button', { name: 'Explain simulation speed' })
-  const information = page.getByRole('region', { name: 'Simulation Speed' })
+  const icon = page.locator('.speed-info-icon')
+  const tooltip = page.locator('#speed-info')
+  const speed = page.getByRole('combobox', { name: 'Race Speed' })
   await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
   await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+  await speed.focus()
+  await expect(speed).toHaveAccessibleDescription(/1 real second equals 8 simulated race seconds/)
+  await expect(tooltip).toBeHidden()
   for (const width of [375, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 })
-    await help.press('Enter')
-    await expect(information).toBeVisible()
-    await expect(information).toContainText('At 1x playback speed, 1 real second equals 8 simulated race seconds.')
-    await expect(information).toContainText('Official finish times and rankings remain unchanged.')
-    const bounds = (await information.boundingBox())!
+    const track = page.locator('.lanes')
+    const before = await track.boundingBox()
+    await icon.hover()
+    await expect(tooltip).toBeVisible()
+    await expect(tooltip).toContainText('Simulation Speed')
+    await expect(tooltip).toContainText('At 1x playback speed, 1 real second equals 8 simulated race seconds.')
+    await expect(tooltip).toContainText('Official finish times and rankings remain unchanged.')
+    const bounds = (await tooltip.boundingBox())!
     expect(bounds.x).toBeGreaterThanOrEqual(0)
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width)
+    expect(bounds.y).toBeGreaterThanOrEqual(0)
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(900)
+    expect(await track.boundingBox()).toEqual(before)
+    await icon.click()
+    await expect(tooltip).toBeVisible()
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)
+    await expect(tooltip).toBeHidden()
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
     await page.clock.runFor(128)
-    await page.keyboard.press('Escape')
-    await expect(information).toBeHidden()
-    await expect(help).toBeFocused()
   }
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(tooltip).toHaveCSS('transition-duration', '0s')
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeEnabled()
   expect(await page.locator('.lane-travel').first().evaluate(node =>
     parseFloat(getComputedStyle(node).getPropertyValue('--progress')),
@@ -695,13 +708,9 @@ test('opens simulation speed help by keyboard and keeps it within all viewport w
 test.describe('speed information on touch', () => {
   test.use({ hasTouch: true, viewport: { width: 375, height: 900 } })
 
-  test('toggles simulation speed help by tapping the info button', async ({ page, openRace }) => {
+  test('does not open simulation speed help on touch', async ({ page, openRace }) => {
     await openRace()
-    const help = page.getByRole('button', { name: 'Explain simulation speed' })
-    const information = page.getByRole('region', { name: 'Simulation Speed' })
-    await help.tap()
-    await expect(information).toBeVisible()
-    await help.tap()
-    await expect(information).toBeHidden()
+    await page.locator('.speed-info-icon').tap()
+    await expect(page.locator('#speed-info')).toBeHidden()
   })
 })
