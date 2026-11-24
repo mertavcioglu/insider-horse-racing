@@ -7,6 +7,7 @@ const props = defineProps<{
   rounds: readonly RaceRound[]
   activeRound?: number
   completedCount: number
+  stopped: boolean
 }>()
 
 const programScroll = ref<HTMLDivElement | null>(null)
@@ -35,7 +36,7 @@ watch(() => props.activeRound, round => {
           Round {{ round.number }} · {{ round.distance }} m
           <small v-if="activeRound === round.number">Active</small>
           <small v-else-if="round.number <= completedCount">Completed</small>
-          <small v-else>Upcoming</small>
+          <small v-else>{{ stopped ? 'Not completed' : 'Upcoming' }}</small>
         </template>
         <table :aria-labelledby="`program-round-${round.number}-heading`">
           <thead>

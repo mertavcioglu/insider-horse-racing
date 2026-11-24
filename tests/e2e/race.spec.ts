@@ -714,3 +714,66 @@ test.describe('speed information on touch', () => {
     await expect(page.locator('#speed-info')).toBeHidden()
   })
 })
+
+for (const [completed, stopDuringTransition] of [[0, false], [2, false], [2, true]] as const) {
+  const phase = stopDuringTransition ? 'during transition' : 'during a round'
+  test(`labels unfinished rounds when stopping ${phase} with ${completed} completed`, async ({ page, openRace }) => {
+    await openRace()
+    const generate = page.getByRole('button', { name: 'Generate Program' })
+    const labels = page.locator('section[aria-labelledby="program-title"] .round-trigger small')
+    const resultHeadings = page.locator('section[aria-labelledby="results-title"] .round-trigger')
+    const upcoming = Array<string>(6).fill('Upcoming')
+    await generate.press('Enter')
+    await expect(labels).toHaveText(upcoming)
+    await page.getByRole('combobox', { name: 'Race Speed' }).selectOption('4')
+    await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+    await expect(labels).toHaveText(['Active', ...upcoming.slice(1)])
+
+    for (let round = 1; round <= completed; round++) {
+      await page.clock.fastForward(25_000)
+      await expect(resultHeadings).toHaveCount(round)
+      if (round < completed || !stopDuringTransition) await page.clock.runFor(1500)
+    }
+
+    const results = await resultHeadings.allTextContents()
+    await page.getByRole('button', { name: 'Stop', exact: true }).press('Enter')
+    await page.getByRole('dialog').getByRole('button', { name: 'End Race' }).press('Enter')
+    await page.clock.fastForward(25_000)
+    await expect(labels).toHaveText([
+      ...Array<string>(completed).fill('Completed'),
+      ...Array<string>(6 - completed).fill('Not completed'),
+    ])
+    await expect(resultHeadings).toHaveText(results)
+    await generate.press('Enter')
+    await expect(labels).toHaveText(upcoming)
+    await expect(resultHeadings).toHaveCount(0)
+  })
+}
+
+test('dismisses lane hover information with Escape while Pause has keyboard focus', async ({ page, openRace }) => {
+  await openRace()
+  await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
+  await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+  const pause = page.getByRole('button', { name: 'Pause', exact: true })
+  await pause.focus()
+  const lane = page.locator('.lanes > li').nth(5)
+  await lane.locator('.lane-number').hover()
+  const tooltip = page.locator('#horse-info-6')
+  await expect(tooltip).toBeVisible()
+  await expect(tooltip).toContainText('Lane 6')
+  await page.keyboard.press('Escape')
+  await expect(pause).toBeFocused()
+  await expect(tooltip).toBeHidden()
+  await lane.locator('.lane-course').hover({ position: { x: 100, y: 10 } })
+  await page.clock.runFor(300)
+  await expect(tooltip).toBeHidden()
+  await page.mouse.move(0, 0)
+  await lane.locator('.lane-number').hover()
+  await expect(tooltip).toBeVisible()
+
+  await page.getByRole('button', { name: 'Stop', exact: true }).press('Enter')
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await expect(pause).toBeEnabled()
+})

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { LANE_COUNT } from '../domain/raceProgram'
 import { getRaceProgress, rankRacePositions } from '../domain/raceSimulation'
 import { useRaceStore } from '../stores/race'
@@ -19,6 +19,15 @@ function dismissHorseInfo() {
   hoveredLane.value = undefined
   focusedLane.value = undefined
 }
+
+function handleEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape' && !props.stopConfirmationOpen && inspectedLane.value !== undefined) {
+    dismissHorseInfo()
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', handleEscape))
+onUnmounted(() => window.removeEventListener('keydown', handleEscape))
 
 function hoverLane(event: PointerEvent, lane: number) {
   if (event.pointerType !== 'touch') hoveredLane.value = lane
@@ -101,7 +110,7 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
                   :aria-describedby="`horse-info-${index + 1}`"
                   :style="{ '--horse-color': position.runner.horse.color }"
                   @focus="focusedLane = index + 1" @blur="focusedLane = undefined"
-                  @click="selectHorse($event, index + 1)" @keydown.esc="dismissHorseInfo">
+                  @click="selectHorse($event, index + 1)">
                   <GallopingHorse :gait="position.progress < 1" :paused="!moving" />
                 </button>
                 <span v-if="position.progress === 1" class="finish-label" aria-hidden="true">Finished</span>
