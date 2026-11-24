@@ -13,15 +13,19 @@ const moving = computed(() => status.value === 'running' && !props.stopConfirmat
 
 const hoveredLane = ref<number>()
 const focusedLane = ref<number>()
-const inspectedLane = computed(() => focusedLane.value ?? hoveredLane.value)
+const inspectedLane = computed(() => hoveredLane.value ?? focusedLane.value)
 
 function dismissHorseInfo() {
   hoveredLane.value = undefined
   focusedLane.value = undefined
 }
 
-function hoverHorse(event: PointerEvent, lane: number) {
+function hoverLane(event: PointerEvent, lane: number) {
   if (event.pointerType !== 'touch') hoveredLane.value = lane
+}
+
+function selectHorse(event: MouseEvent, lane: number) {
+  focusedLane.value = event instanceof PointerEvent && event.pointerType === 'mouse' ? undefined : lane
 }
 
 const winningResult = computed(() => {
@@ -59,15 +63,21 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
 
 <template>
   <section class="panel" aria-labelledby="track-title">
-    <h2 id="track-title" class="panel-title">Race Track</h2>
+    <h2 id="track-title" class="panel-title track-heading" :class="{ 'winner-announcement': winner }">
+      <span class="visually-hidden">Race Track</span>
+      <template v-if="winner">
+        <span class="winner-name" aria-hidden="true" :title="winner.horse.name">Winner: {{ winner.horse.name }}!</span>
+        <span class="winner-time" aria-hidden="true">{{ winner.finishSeconds.toFixed(2) }} s</span>
+      </template>
+      <span v-else aria-hidden="true">Race Track</span>
+    </h2>
     <div class="track">
-      <div class="track-status" :class="{ 'winner-announcement': winner }" role="status">
+      <div class="track-status" role="status">
         <template v-if="winningResult && winner">
-          <strong class="winner-round">Round {{ winningResult.round }} · {{ winningResult.distance }} m completed</strong>
-          <strong class="winner-name">Winner: {{ winner.horse.name }}!</strong>
-          <span class="winner-time">{{ winner.finishSeconds.toFixed(2) }} seconds</span>
-          <span v-if="status === 'transition'">Round {{ winningResult.round + 1 }} starts shortly.</span>
-          <span v-else>All rounds complete. Generate a new program to race again.</span>
+          <span class="visually-hidden">Winner: {{ winner.horse.name }}, {{ winner.finishSeconds.toFixed(2) }} seconds. </span>
+          <strong>Round {{ winningResult.round }} · {{ winningResult.distance }} m completed.</strong>
+          <span v-if="status === 'transition'">{{ ' ' }}Round {{ winningResult.round + 1 }} starts shortly.</span>
+          <span v-else>{{ ' ' }}All rounds complete.</span>
         </template>
         <template v-else-if="simulation">
           <strong>Round {{ simulation.round.number }} · {{ simulation.round.distance }} m</strong>
@@ -79,7 +89,9 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
       </div>
       <div class="track-labels" aria-hidden="true"><span>Start</span><span>Finish</span></div>
       <ol class="lanes" aria-label="Race lanes">
-        <li v-for="(position, index) in simulation ? positions : LANE_COUNT" :key="index">
+        <li v-for="(position, index) in simulation ? positions : LANE_COUNT" :key="index"
+          @pointerenter="typeof position !== 'number' && hoverLane($event, index + 1)"
+          @pointerleave="hoveredLane = undefined">
           <span class="lane-number">{{ index + 1 }}</span>
           <template v-if="typeof position !== 'number'">
             <div class="lane-course">
@@ -88,9 +100,8 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
                   :aria-label="position.runner.horse.name + (position.progress === 1 ? ', finished' : '')"
                   :aria-describedby="`horse-info-${index + 1}`"
                   :style="{ '--horse-color': position.runner.horse.color }"
-                  @pointerenter="hoverHorse($event, index + 1)" @pointerleave="hoveredLane = undefined"
                   @focus="focusedLane = index + 1" @blur="focusedLane = undefined"
-                  @click="focusedLane = index + 1" @keydown.esc="dismissHorseInfo">
+                  @click="selectHorse($event, index + 1)" @keydown.esc="dismissHorseInfo">
                   <GallopingHorse :gait="position.progress < 1" :paused="!moving" />
                 </button>
                 <span v-if="position.progress === 1" class="finish-label" aria-hidden="true">Finished</span>
@@ -185,23 +196,34 @@ li + li { border-top: 1px dashed #96a77d; }
 }
 .horse-info-start { inset-inline-start: 2.4rem; inset-inline-end: auto; }
 .horse-info strong { display: block; font-size: .75rem; }
-.track-status { min-height: 1.25rem; margin: 0 0 .75rem; color: var(--muted); font-size: .875rem; }
-.track-status strong { color: #192a26; }
-.winner-announcement {
+.track-heading {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: .15rem .55rem;
-  padding: .55rem .7rem;
-  border: 1px solid #e5d4a7;
-  border-inline-start: .25rem solid #a67c29;
-  border-radius: .35rem;
-  background: #faf5e8;
-  color: #5d4a26;
+  align-items: center;
+  gap: .55rem;
+  block-size: 3.2rem;
 }
-.winner-round { flex-basis: 100%; font-size: .75rem; text-transform: uppercase; }
-.winner-name { font-size: 1rem; }
-.winner-time { font-variant-numeric: tabular-nums; }
+.track-status {
+  block-size: 2.5rem;
+  overflow: hidden;
+  margin: 0 0 .75rem;
+  color: var(--muted);
+  font-size: .875rem;
+  line-height: 1.25rem;
+}
+.track-status strong { color: #192a26; }
+.winner-announcement { background: #faf5e8; color: #5d4a26; }
+.winner-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.winner-time { flex: none; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .finish-label { display: none; }
 
 @media (prefers-reduced-motion: reduce) {

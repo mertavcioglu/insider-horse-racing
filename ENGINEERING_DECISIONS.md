@@ -34,7 +34,7 @@
 
 ## Decorative motion and runner details
 
-**Decision** — Keep the gait in stepped CSS over three leg poses and a fixed SVG body. Use Vue TransitionGroup to move leaderboard rows keyed by horse ID. Keep runner information in a lane-local tooltip.
+**Decision** — Keep the gait in stepped CSS over three leg poses and a fixed SVG body. Use Vue TransitionGroup to move leaderboard rows keyed by horse ID. Keep runner information in a lane-local tooltip triggered by lane hover or marker focus and tap.
 
 **Rationale** — The simulation already supplies motion state, horizontal position, and rank. Visual effects use that state without scheduling another race clock. The tooltip uses the current runner and the lane edges for positioning.
 
@@ -42,7 +42,7 @@
 
 ## Program and results presentation
 
-**Decision** — Use one open section per panel, with local expansion state. Render rank badges in the official results table and derive the track announcement from its first entry and the existing transition or finished state.
+**Decision** — Use one open section per panel, with local expansion state. Use intrinsic grid-row transitions for accordion contents. Render rank badges in the official results table and derive the winner header from its first entry and the existing transition or finished state. Keep the title and status slots at consistent heights.
 
 **Rationale** — Collapsed headers make rounds easier to scan, and the official data remains the source for tables and winner notices. The announcement uses the existing transition window, so timing remains consistent with Stop and playback speed.
 

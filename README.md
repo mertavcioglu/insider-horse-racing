@@ -19,9 +19,9 @@ A browser-based horse racing simulator for the Insider One frontend assessment. 
 - Six rounds with 10 randomly selected horses each, covering 1,200 to 2,200 metres in 200-metre increments.
 - A 10-lane track with Start, Pause, and Resume controls. The program advances automatically after each round.
 - Stop with confirmation, preserving completed results, and a 0.5x, 1x, or 2x viewing speed that leaves race outcomes unchanged.
-- Color-coded SVG horses with a three-pose gait, on-demand runner details, and a live leaderboard that highlights changes in rank.
-- Expandable program and results panels, with all 10 official finish times available after each round and badges for the top three ranks.
-- A track-side winner announcement during each round transition and after the final round.
+- Color-coded SVG horses with a three-pose gait, lane-hover, keyboard, and tap runner details, and a live leaderboard that highlights changes in rank.
+- Animated program and results accordions, with all 10 official finish times available after each round and badges for the top three ranks.
+- A winner announcement in the track title that keeps the lanes in place during transitions and after the final round.
 - Keyboard-operable controls, responsive panels, and fixed markers with finish indicators when reduced motion is requested.
 
 See [FEATURES.md](FEATURES.md) for the current feature inventory and the distinction between assessment requirements and implementation decisions.

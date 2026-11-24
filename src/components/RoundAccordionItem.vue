@@ -9,17 +9,19 @@ const props = defineProps<{
 const emit = defineEmits<{ toggle: [] }>()
 const trigger = ref<HTMLButtonElement | null>(null)
 
-watch(() => props.open, open => {
+function keepTriggerVisible() {
   const button = trigger.value
   const scrollArea = button?.closest('.table-scroll')
-  if (!open || !button || !scrollArea) return
+  if (!props.open || !button || !scrollArea) return
 
   const header = button.getBoundingClientRect()
   const viewport = scrollArea.getBoundingClientRect()
   if (header.top < viewport.top || header.bottom > viewport.bottom) {
     scrollArea.scrollTop += header.top - viewport.top
   }
-}, { flush: 'post' })
+}
+
+watch(() => props.open, keepTriggerVisible, { flush: 'post' })
 </script>
 
 <template>
@@ -31,8 +33,9 @@ watch(() => props.open, open => {
       <span class="chevron" aria-hidden="true" />
     </button>
   </h3>
-  <div v-show="open" :id="id">
-    <slot />
+  <div :id="id" class="round-content" :class="{ open }" :inert="!open"
+    @transitionend.self="keepTriggerVisible">
+    <div class="round-content-inner"><slot /></div>
   </div>
 </template>
 
@@ -67,4 +70,18 @@ watch(() => props.open, open => {
   transform: rotate(45deg);
 }
 [aria-expanded='true'] .chevron { transform: rotate(225deg); }
+.round-content { display: grid; grid-template-rows: 0fr; visibility: hidden; }
+.round-content.open { grid-template-rows: 1fr; visibility: visible; }
+.round-content-inner { min-height: 0; overflow: hidden; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .round-content {
+    transition: grid-template-rows 220ms cubic-bezier(.25, .1, .25, 1), visibility 220ms;
+  }
+  .chevron { transition: transform 220ms cubic-bezier(.25, .1, .25, 1); }
+
+  @starting-style {
+    .round-content.open { grid-template-rows: 0fr; }
+  }
+}
 </style>
