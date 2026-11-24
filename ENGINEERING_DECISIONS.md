@@ -38,7 +38,7 @@
 
 **Rationale** — The simulation already supplies motion state, horizontal position, and rank. Visual effects use that state without scheduling another race clock. The tooltip uses the current runner and the lane edges for positioning.
 
-**Trade-offs** — Gait cadence is fixed across playback speeds to keep the pose stable on speed changes. The rank transition shortens at 2x. Large rank changes settle immediately to limit crossing rows, and Pause or Stop confirmation cancels in-flight transitions. Reduced motion suppresses both effects.
+**Trade-offs** — Gait cadence is fixed across playback speeds to keep the pose stable on speed changes. The rank transition shortens at 2x and is disabled at 4x to leave room for faster samples. Large rank changes settle immediately to limit crossing rows, and Pause or Stop confirmation cancels in-flight transitions. Reduced motion suppresses both effects.
 
 ## Program and results presentation
 
@@ -50,7 +50,7 @@
 
 ## Stop and playback speed
 
-**Decision** — Keep the confirmation flag local to the controls, with a distinct `stopped` state in Pinia for confirmed cancellation. Apply playback speed to real-time frame deltas. Commit the partial frame at the old rate before assigning a new rate.
+**Decision** — Keep the confirmation flag local to the controls, with a distinct `stopped` state in Pinia for confirmed cancellation. Apply playback speed to real-time frame deltas. At 1x the simulation advances eight seconds per real second, and at 4x it advances 32. Commit the partial frame at the old rate before assigning a new rate.
 
 **Rationale** — Opening the dialog freezes the last displayed frame and cancels scheduled work. Cancel preserves the prior race state and resumes any remaining real-time transition delay. Confirm discards the active simulation and retains completed results. Scaling deltas leaves pace segments and official finish times intact.
 

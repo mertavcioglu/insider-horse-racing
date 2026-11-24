@@ -2,7 +2,7 @@ import type { Horse } from './horse'
 import type { RaceRound } from './raceProgram'
 
 // One real second represents eight seconds of racing.
-const TIME_SCALE = 8
+export const TIME_SCALE = 8
 const SEGMENT_COUNT = 3
 
 interface PaceSegment {

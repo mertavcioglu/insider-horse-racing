@@ -47,7 +47,12 @@ watch(() => props.activeRound, round => {
           <tbody>
             <tr v-for="(horse, index) in round.participants" :key="horse.id">
               <td>{{ index + 1 }}</td>
-              <th scope="row">{{ horse.name }}</th>
+              <th scope="row">
+                <span class="program-horse">
+                  <span class="swatch" :style="{ backgroundColor: horse.color }" aria-hidden="true" />
+                  {{ horse.name }}
+                </span>
+              </th>
             </tr>
           </tbody>
         </table>
@@ -60,4 +65,6 @@ watch(() => props.activeRound, round => {
 .panel-title { background: #e6edf9; }
 small { display: block; margin-top: .15rem; color: var(--muted); font-size: .75rem; }
 tbody th { font-weight: 550; }
+.program-horse { display: flex; align-items: center; gap: .35rem; }
+.swatch { flex: 0 0 .55rem; height: .55rem; border-radius: 50%; }
 </style>

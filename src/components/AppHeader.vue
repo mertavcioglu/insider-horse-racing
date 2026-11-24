@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { TIME_SCALE } from '../domain/raceSimulation'
 import { PLAYBACK_SPEEDS, type PlaybackSpeed, type RaceStatus } from '../stores/race'
 
 const props = defineProps<{
@@ -65,13 +66,22 @@ const raceLabels: Record<RaceStatus, string> = {
       <button ref="stopButton" class="stop" type="button" :disabled="!generateDisabled" @click="emit('requestStop')">
         Stop
       </button>
-      <label class="speed">
-        Race Speed
-        <select :value="playbackSpeed" @change="selectSpeed">
+      <div class="speed">
+        <label for="race-speed">Race Speed</label>
+        <button class="speed-info-button" type="button" popovertarget="speed-info"
+          aria-controls="speed-info" aria-label="Explain simulation speed">
+          <span aria-hidden="true">i</span>
+        </button>
+        <select id="race-speed" :value="playbackSpeed" @change="selectSpeed">
           <option v-for="speed in PLAYBACK_SPEEDS" :key="speed" :value="speed">{{ speed }}x</option>
         </select>
-      </label>
+      </div>
     </div>
+    <section id="speed-info" class="speed-info" popover aria-labelledby="speed-info-title">
+      <h2 id="speed-info-title">Simulation Speed</h2>
+      <p>At 1x playback speed, 1 real second equals {{ TIME_SCALE }} simulated race seconds.</p>
+      <p>Playback speed changes only how quickly the race is displayed. Official finish times and rankings remain unchanged.</p>
+    </section>
     <dialog ref="confirmation" aria-labelledby="stop-title" aria-describedby="stop-description"
       @cancel.prevent="emit('resolveStop', false)">
       <h2 id="stop-title">End Current Race?</h2>
@@ -97,6 +107,7 @@ const raceLabels: Record<RaceStatus, string> = {
   padding: 1rem;
   background: #172d26;
   color: #fff;
+  anchor-name: --race-header;
 }
 h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.025em; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
@@ -109,6 +120,43 @@ button, select {
   font-weight: 650;
 }
 .speed { display: flex; align-items: center; gap: .45rem; font-size: .875rem; }
+.speed-info-button {
+  display: grid;
+  place-items: center;
+  min-height: 2.75rem;
+  width: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e9f3ed;
+  cursor: pointer;
+}
+.speed-info-button span {
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: .6875rem;
+  line-height: .875rem;
+}
+.speed-info-button:hover span { background: #36574b; }
+.speed-info {
+  position: fixed;
+  position-anchor: --race-header;
+  inset: 9.5rem 1rem auto auto;
+  top: calc(anchor(bottom, 9rem) + .5rem);
+  margin: 0;
+  width: min(19rem, calc(100vw - 2rem));
+  padding: .9rem;
+  border: 1px solid var(--line);
+  border-radius: .55rem;
+  background: var(--surface);
+  color: #192a26;
+  box-shadow: 0 .35rem 1rem #172d2626;
+  font-size: .875rem;
+}
+.speed-info h2 { margin: 0; font-size: .95rem; }
+.speed-info p { margin: .45rem 0 0; color: var(--muted); }
 .speed select { font-family: inherit; background: #244238; color: white; border-color: #779185; }
 .stop { background: transparent; color: #ffd9d5; border-color: #da8f85; cursor: pointer; }
 .stop:hover:not(:disabled) { background: #56312e; }

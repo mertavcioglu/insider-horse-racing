@@ -590,3 +590,118 @@ test('keeps track, start and finish labels, first lane, and leaderboard at the s
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
   }
 })
+
+test('shows each programmed horse color using the roster palette', async ({ page, openRace }) => {
+  await openRace()
+  await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
+  const roster = await page.locator('.horse-list tbody tr').evaluateAll(rows => Object.fromEntries(
+    rows.map(row => [row.querySelector('th')!.textContent!.trim(), getComputedStyle(row.querySelector('.swatch')!).backgroundColor]),
+  ))
+  for (let round = 1; round <= 6; round++) {
+    if (round > 1) await page.locator('#program-round-' + round + '-heading').press('Enter')
+    const rows = page.locator('#program-round-' + round + ' tbody tr')
+    await expect(rows).toHaveCount(10)
+    const lineup = await rows.evaluateAll(entries => entries.map(row => {
+      const swatch = row.querySelector('.swatch')!
+      return {
+        lane: Number(row.querySelector('td')!.textContent),
+        name: row.querySelector('th')!.textContent!.trim(),
+        color: getComputedStyle(swatch).backgroundColor,
+        hiddenFromScreenReaders: swatch.getAttribute('aria-hidden'),
+      }
+    }))
+    for (const [index, { lane, name, color, hiddenFromScreenReaders }] of lineup.entries()) {
+      expect(lane).toBe(index + 1)
+      expect(color).toBe(roster[name])
+      expect(hiddenFromScreenReaders).toBe('true')
+    }
+  }
+})
+
+test('runs at 4x without moving ranks decoratively or shortening the transition', async ({ page, openRace }) => {
+  await openRace()
+  const speed = page.getByRole('combobox', { name: 'Race Speed' })
+  const generate = page.getByRole('button', { name: 'Generate Program' })
+  const control = (name: string) => page.getByRole('button', { name, exact: true })
+  await expect(speed).toHaveValue('1')
+  await expect(speed.locator('option')).toHaveText(['0.5x', '1x', '2x', '4x'])
+  await generate.press('Enter')
+  await control('Start').press('Enter')
+  await speed.selectOption('4')
+  await page.clock.runFor(1000)
+  const standings = page.locator('.standings')
+  await expect(standings).not.toHaveClass(/animated/)
+  await expect(standings.locator('.leading')).toHaveCount(3)
+  await control('Pause').press('Enter')
+  const positions = () => page.locator('.lane-travel').evaluateAll(lanes => lanes.map(lane =>
+    Number.parseFloat(getComputedStyle(lane).getPropertyValue('--progress')),
+  ))
+  const frozen = await positions()
+  expect(frozen.every(value => value > 0 && value < 100)).toBe(true)
+  await page.clock.runFor(500)
+  expect(await positions()).toEqual(frozen)
+  await control('Resume').press('Enter')
+  await control('Stop').press('Enter')
+  await page.clock.runFor(500)
+  expect(await positions()).toEqual(frozen)
+  await page.keyboard.press('Escape')
+  await page.clock.runFor(400)
+  expect((await positions())[0]).toBeGreaterThan(frozen[0])
+  await page.clock.fastForward(8000)
+  const result = page.locator('#result-round-1')
+  await expect(result).toBeVisible()
+  await expect(standings.locator('.standing-name')).toHaveText(
+    (await result.locator('tbody th').allTextContents()).map(name => name.trim()),
+  )
+  await page.clock.runFor(1499)
+  await expect(page.getByRole('status')).toContainText('Round 2 starts shortly')
+  await page.clock.runFor(1)
+  await expect(page.getByRole('status')).toContainText('Round 2')
+  await expect(speed).toHaveValue('4')
+  await control('Stop').press('Enter')
+  await control('End Race').press('Enter')
+  await generate.press('Enter')
+  await expect(speed).toHaveValue('1')
+})
+
+test('opens simulation speed help by keyboard and keeps it within all viewport widths', async ({ page, openRace }) => {
+  await openRace()
+  const help = page.getByRole('button', { name: 'Explain simulation speed' })
+  const information = page.getByRole('region', { name: 'Simulation Speed' })
+  await page.getByRole('button', { name: 'Generate Program' }).press('Enter')
+  await page.getByRole('button', { name: 'Start', exact: true }).press('Enter')
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await help.press('Enter')
+    await expect(information).toBeVisible()
+    await expect(information).toContainText('At 1x playback speed, 1 real second equals 8 simulated race seconds.')
+    await expect(information).toContainText('Official finish times and rankings remain unchanged.')
+    const bounds = (await information.boundingBox())!
+    expect(bounds.x).toBeGreaterThanOrEqual(0)
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width)
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(900)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+    await page.clock.runFor(128)
+    await page.keyboard.press('Escape')
+    await expect(information).toBeHidden()
+    await expect(help).toBeFocused()
+  }
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeEnabled()
+  expect(await page.locator('.lane-travel').first().evaluate(node =>
+    parseFloat(getComputedStyle(node).getPropertyValue('--progress')),
+  )).toBeGreaterThan(0)
+})
+
+test.describe('speed information on touch', () => {
+  test.use({ hasTouch: true, viewport: { width: 375, height: 900 } })
+
+  test('toggles simulation speed help by tapping the info button', async ({ page, openRace }) => {
+    await openRace()
+    const help = page.getByRole('button', { name: 'Explain simulation speed' })
+    const information = page.getByRole('region', { name: 'Simulation Speed' })
+    await help.tap()
+    await expect(information).toBeVisible()
+    await help.tap()
+    await expect(information).toBeHidden()
+  })
+})

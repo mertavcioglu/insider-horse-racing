@@ -116,7 +116,7 @@ watch([simulation, leaderboardTick, status], ([race], [previousRace]) => {
         </li>
       </ol>
       <LiveLeaderboard v-if="standings.length" :key="simulation?.round.number" :standings="standings"
-        :animate="moving" :fast="playbackSpeed === 2"
+        :animate="moving && playbackSpeed < 4" :fast="playbackSpeed === 2"
         :complete="status === 'transition' || status === 'finished'" />
     </div>
   </section>

@@ -18,9 +18,9 @@ A browser-based horse racing simulator for the Insider One frontend assessment. 
 - A roster of 20 horses with unique names and colors and randomized condition scores from 1 to 100.
 - Six rounds with 10 randomly selected horses each, covering 1,200 to 2,200 metres in 200-metre increments.
 - A 10-lane track with Start, Pause, and Resume controls. The program advances automatically after each round.
-- Stop with confirmation, preserving completed results, and a 0.5x, 1x, or 2x viewing speed that leaves race outcomes unchanged.
+- Stop with confirmation, preserving completed results, and 0.5x, 1x, 2x, and 4x viewing speeds that leave race outcomes unchanged.
 - Color-coded SVG horses with a three-pose gait, lane-hover, keyboard, and tap runner details, and a live leaderboard that highlights changes in rank.
-- Animated program and results accordions, with all 10 official finish times available after each round and badges for the top three ranks.
+- Animated program and results accordions with roster colors, with all 10 official finish times available after each round and badges for the top three ranks.
 - A winner announcement in the track title that keeps the lanes in place during transitions and after the final round.
 - Keyboard-operable controls, responsive panels, and fixed markers with finish indicators when reduced motion is requested.
 
@@ -58,7 +58,7 @@ The build runs TypeScript checks and writes the production bundle to `dist/`. Th
 ## Architecture & Design Decisions
 
 - **Shared state.** Pinia coordinates controls, the track, and the results panel through a small set of race states. Browser frame and timeout handles stay in the animation composable, which cancels them when the application unmounts.
-- **Pacing.** Pure TypeScript maps condition scores to base speeds of 14–18 m/s. Each horse draws a round-level form multiplier of 0.88–1.12 and a tempo multiplier of 0.95–1.05 for each of three equal-distance segments. Higher condition helps, while overlapping pace ranges allow different outcomes. Eight simulated seconds pass per real second.
+- **Pacing.** Pure TypeScript maps condition scores to base speeds of 14–18 m/s. Each horse draws a round-level form multiplier of 0.88–1.12 and a tempo multiplier of 0.95–1.05 for each of three equal-distance segments. Higher condition helps, while overlapping pace ranges allow different outcomes. At 1x, eight simulated seconds pass per real second. At 4x, 32 pass. The Race Speed info button explains this viewing scale.
 - **Position and ranking.** The same segment speeds determine both track position at a given elapsed time and each horse's finish time. Results use unrounded finish times and break exact ties by lane. Displayed times are simulated seconds rounded to two decimals.
 - **Clock and progression.** A single `requestAnimationFrame` loop advances the race clock. Pause records elapsed time and stops the loop. Resume establishes a fresh time reference. Once the last horse finishes, the store records the result and the composable waits 1.5 seconds before starting the next round.
 

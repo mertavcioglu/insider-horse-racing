@@ -126,7 +126,7 @@ describe('useRaceAnimation', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it.each([[0.5, 16], [1, 32], [2, 64]] as const)(
+  it.each([[0.5, 16], [1, 32], [2, 64], [4, 128]] as const)(
     'advances the race clock at %sx without changing official results',
     (speed, expectedElapsed) => {
       expect(race.playbackSpeed).toBe(1)
@@ -165,6 +165,21 @@ describe('useRaceAnimation', () => {
     controls.toggleRace()
     vi.advanceTimersByTime(32)
     expect(race.elapsedMs).toBe(57)
+  })
+
+  it('switches between 4x and 1x without replaying elapsed time or rerolling the race', () => {
+    controls.toggleRace()
+    const simulation = race.simulation
+    vi.advanceTimersByTime(23)
+    controls.changeSpeed(4)
+    expect(race.elapsedMs).toBe(23)
+    vi.advanceTimersByTime(1000)
+    controls.changeSpeed(1)
+    expect(race.elapsedMs).toBe(4023)
+    vi.advanceTimersByTime(17)
+    controls.toggleRace()
+    expect(race.elapsedMs).toBe(4040)
+    expect(race.simulation).toBe(simulation)
   })
 
   it('freezes the current frame and rejects other controls while confirming Stop', () => {
