@@ -49,7 +49,10 @@ const raceLabels: Record<RaceStatus, string> = {
 
 <template>
   <header class="app-header">
-    <h1>Horse Racing</h1>
+    <div class="app-title">
+      <h1>Horse Racing</h1>
+      <p class="developer-credit">Developed by Mert Avcıoğlu</p>
+    </div>
     <div class="controls">
       <button ref="generateButton" class="generate" type="button" :disabled="generateDisabled" @click="emit('generate')">
         Generate Program
@@ -108,7 +111,8 @@ const raceLabels: Record<RaceStatus, string> = {
   color: #fff;
   position: relative;
 }
-h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.025em; }
+h1 { margin: 0; font-size: 1.5rem; line-height: 1.2; letter-spacing: -.025em; }
+.developer-credit { margin: 0; color: #c1d8cb; font-size: .75rem; line-height: 1.2; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 button, select {
   min-height: 2.75rem;

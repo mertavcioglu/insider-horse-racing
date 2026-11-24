@@ -1,5 +1,7 @@
 # Horse Racing Assessment
 
+**Live Demo:** [insider-horse-racing.vercel.app](https://insider-horse-racing.vercel.app/)
+
 ## Project Overview
 
 A browser-based horse racing simulator for the Insider One frontend assessment. Generate a six-round program, watch the races run in order, and review each round's results as the program progresses.
